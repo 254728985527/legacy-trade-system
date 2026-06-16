@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { SignalCircles } from './signal-circles';
+import type { Candle } from '@/hooks/use-candle-data';
 
 interface CandleData {
   time: number;
@@ -12,14 +14,28 @@ interface CandleData {
 
 interface CandleStickChartProps {
   currentPrice?: number;
-  ticks?: CandleData[];
+  candles?: Candle[];
   symbol?: string;
+  isGlowingSignal?: boolean;
 }
 
-export function CandleStickChart({ currentPrice = 94582.04, ticks = [], symbol = 'Jump 10 Index' }: CandleStickChartProps) {
-  // Generate mock candlestick data if not provided
+export function CandleStickChart({ 
+  currentPrice = 94582.04, 
+  candles = [], 
+  symbol = 'Jump 10 Index',
+  isGlowingSignal = false
+}: CandleStickChartProps) {
+  // Use real candle data or generate mock data
   const candleData = useMemo(() => {
-    if (ticks.length > 0) return ticks.slice(-8);
+    if (candles.length > 0) {
+      return candles.slice(-8).map((c, idx) => ({
+        time: idx,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      }));
+    }
     
     // Generate 8 candlesticks for display
     const data: CandleData[] = [];
@@ -34,7 +50,7 @@ export function CandleStickChart({ currentPrice = 94582.04, ticks = [], symbol =
       data.push({ time: i, open, high, low, close });
     }
     return data;
-  }, [ticks]);
+  }, [candles]);
 
   const minPrice = Math.min(...candleData.map(c => c.low)) - 50;
   const maxPrice = Math.max(...candleData.map(c => c.high)) + 50;
@@ -46,7 +62,10 @@ export function CandleStickChart({ currentPrice = 94582.04, ticks = [], symbol =
   const padding = 10;
 
   return (
-    <div className="w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5 mb-6">
+    <div className={`w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5 mb-6 ${isGlowingSignal ? 'ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/50' : ''}`}>
+      {/* Signal Circles */}
+      <SignalCircles candles={candles} isGlowing={isGlowingSignal} />
+
       <div className="flex justify-between items-center mb-4">
         <p className="text-[rgb(255,193,7)] text-sm font-bold">CANDLE</p>
         <div className="flex gap-2">

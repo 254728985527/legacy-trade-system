@@ -1,9 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { CandleStickChart } from './candle-stick-chart';
-import { BettingTypeButtons } from './betting-type-buttons';
-import { TransactionHistoryTable } from './transaction-table';
-import { SettingsPanel } from './settings-panel';
+import { LDPDisplay } from './ldp-display';
+import { SignalCircles } from './signal-circles';
+import { SignalPopup } from './signal-popup';
+import { ContractControls } from './contract-controls';
+import { TradeControlsPanel } from './trade-controls-panel';
+import { TransactionHistoryEnhanced } from './transaction-history-enhanced';
+import { AccountSwitcher } from './account-switcher';
+import { useFullTrading } from '@/hooks/use-full-trading';
 import type { ActiveSymbol, Tick, ProposalInfo } from '@deriv/core';
 
 interface TradingLayoutProps {
@@ -17,9 +23,6 @@ interface TradingLayoutProps {
   onBuy: () => Promise<void>;
   isBuying: boolean;
   buyError?: string | null;
-
-  // Additional UI props
-  children?: React.ReactNode;
 }
 
 export function TradingLayout({
@@ -30,14 +33,36 @@ export function TradingLayout({
   onBuy,
   isBuying,
   buyError,
-  children,
 }: TradingLayoutProps) {
-  const currentPrice = currentTick?.quote || 0;
+  const trading = useFullTrading();
+  const currentPrice = currentTick?.quote || trading.currentPrice || 0;
+  const [visibleSignal, setVisibleSignal] = useState<any>(null);
+
+  // Connect WebSocket on mount
+  useEffect(() => {
+    if (!trading.isConnected) {
+      trading.connectWebSocket();
+    }
+  }, [trading]);
+
+  // Show signal popup when strong signal detected
+  useEffect(() => {
+    if (trading.isStrongSignal && (trading.lastOverSignal || trading.lastUnderSignal)) {
+      setVisibleSignal(trading.lastOverSignal || trading.lastUnderSignal);
+    }
+  }, [trading.isStrongSignal, trading.lastOverSignal, trading.lastUnderSignal]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
+      {/* Account Switcher */}
+      <AccountSwitcher
+        accountType={trading.accountType}
+        accountBalance={trading.accountBalance}
+        onAccountTypeChange={trading.setAccountType}
+      />
+
       {/* VOL Section */}
-      <div className="w-full">
+      <div className="w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5">
         <p className="text-[rgb(255,193,7)] text-sm font-bold mb-4">VOL</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -50,17 +75,47 @@ export function TradingLayout({
         </div>
       </div>
 
-      {/* Betting Type Buttons */}
-      <BettingTypeButtons />
+      {/* LDP Display */}
+      <LDPDisplay digitHistory={trading.digitHistory} />
 
-      {/* Candlestick Chart */}
-      <CandleStickChart currentPrice={currentPrice} symbol={activeSymbol?.display_name} />
+      {/* Contract Controls */}
+      <ContractControls
+        selectedContract={trading.selectedContract as any}
+        onContractChange={trading.setSelectedContract}
+        selectedBarrier={trading.selectedBarrier}
+        onBarrierChange={trading.setSelectedBarrier}
+      />
+
+      {/* Candlestick Chart with Signal Circles */}
+      <CandleStickChart
+        currentPrice={currentPrice}
+        candles={trading.candles}
+        symbol={activeSymbol?.display_name}
+        isGlowingSignal={trading.isGlowingSignal}
+      />
 
       {/* Transaction History */}
-      <TransactionHistoryTable />
+      <TransactionHistoryEnhanced
+        trades={trading.trades}
+        onRefresh={() => {
+          trading.clearTrades();
+          trading.disconnectWebSocket();
+          setTimeout(() => trading.connectWebSocket(), 500);
+        }}
+      />
 
-      {/* Settings Panel */}
-      <SettingsPanel />
+      {/* Trade Controls */}
+      <TradeControlsPanel
+        baseStake={trading.baseStake}
+        onStakeChange={trading.setBaseStake}
+        martingaleEnabled={trading.martingaleEnabled}
+        onMartingaleToggle={trading.setMartingaleEnabled}
+        martingaleMultiplier={trading.martingaleMultiplier}
+        onMultiplierChange={trading.setMartingaleMultiplier}
+        autoTradeEnabled={trading.autoTradeEnabled}
+        onAutoTradeToggle={trading.setAutoTradeEnabled}
+        onBuyClick={onBuy}
+      />
 
       {/* Error Message */}
       {buyError && (
@@ -69,21 +124,12 @@ export function TradingLayout({
         </div>
       )}
 
-      {/* Buy Button */}
-      <button
-        onClick={onBuy}
-        disabled={isBuying || isProposalLoading}
-        className={`w-full py-4 rounded-full font-bold text-lg transition-all ${
-          isBuying || isProposalLoading
-            ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed'
-            : 'bg-[rgb(0,195,144)] text-white hover:bg-[rgb(0,175,124)] shadow-lg hover:shadow-xl'
-        }`}
-      >
-        {isBuying ? 'Processing...' : 'Buy'}
-      </button>
-
-      {/* Children content (other components) */}
-      {children}
+      {/* Signal Popup */}
+      <SignalPopup
+        signal={visibleSignal}
+        onClose={() => setVisibleSignal(null)}
+        autoClose={8000}
+      />
     </div>
   );
 }
