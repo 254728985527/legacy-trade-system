@@ -68,19 +68,19 @@
   }
 
   .dark {
-    /* Dark mode colors from Figma tokens */
+    /* Dark mode colors - Trading Dashboard Theme */
     --primary: 0 81 255;
     --accent-foreground: 246 247 248;
-    --background: 24 28 37;
-    --border: 255 255 255 / 0.10000000149011612;
-    --card: 23 23 23;
+    --background: 20 24 31;
+    --border: 255 255 255 / 0.08;
+    --card: 30 36 47;
     --accent: 17 20 27;
     --card-foreground: 255 255 255;
-    --destructive: 230 25 14 / 0.7200000286102295;
+    --destructive: 230 25 14 / 0.72;
     --destructive-foreground: 254 252 252;
     --foreground: 255 255 255;
-    --input: 255 255 255 / 0.07999999821186066;
-    --muted: 38 38 38;
+    --input: 255 255 255 / 0.08;
+    --muted: 48 54 61;
     --popover: 38 38 38;
     --popover-foreground: 255 255 255;
     --primary-foreground: 255 255 255;
@@ -97,32 +97,38 @@
     --button-black-foreground: 255 255 255;
     --button-white: 255 255 255;
     --button-white-foreground: 0 0 0;
-    --alpha-10: 0 0 0 / 0.8999999761581421;
-    --alpha-20: 0 0 0 / 0.800000011920929;
-    --alpha-30: 0 0 0 / 0.699999988079071;
-    --alpha-40: 0 0 0 / 0.6000000238418579;
+    --alpha-10: 0 0 0 / 0.9;
+    --alpha-20: 0 0 0 / 0.8;
+    --alpha-30: 0 0 0 / 0.7;
+    --alpha-40: 0 0 0 / 0.6;
     --alpha-50: 0 0 0 / 0.5;
-    --alpha-60: 0 0 0 / 0.4000000059604645;
-    --alpha-70: 0 0 0 / 0.30000001192092896;
-    --alpha-80: 0 0 0 / 0.20000000298023224;
-    --alpha-90: 0 0 0 / 0.10000000149011612;
-    --ring-offset: 24 28 37;
-    --alpha-5: 0 0 0 / 0.949999988079071;
+    --alpha-60: 0 0 0 / 0.4;
+    --alpha-70: 0 0 0 / 0.3;
+    --alpha-80: 0 0 0 / 0.2;
+    --alpha-90: 0 0 0 / 0.1;
+    --ring-offset: 20 24 31;
+    --alpha-5: 0 0 0 / 0.95;
     --outline: 115 115 115 / 0.5;
-    --dark:input: 0 0 0 / 0.07999999821186066;
-    --destructive-20: 248 113 113 / 0.4000000059604645;
-    --destructive-40: 248 113 113 / 0.6000000238418579;
-    --outline-10: 115 115 115 / 0.20000000298023224;
+    --dark:input: 0 0 0 / 0.08;
+    --destructive-20: 248 113 113 / 0.4;
+    --destructive-40: 248 113 113 / 0.6;
+    --outline-10: 115 115 115 / 0.2;
     --blue-500: 37 99 235;
-    --buy-20: 0 195 144 / 0.4000000059604645;
-    --sell-20: 222 0 64 / 0.4000000059604645;
-    --section-message: 30 64 175 / 0.8399999737739563;
+    --buy-20: 0 195 144 / 0.4;
+    --sell-20: 222 0 64 / 0.4;
+    --section-message: 30 64 175 / 0.84;
     --border-focus: 255 255 255;
     --border-focus-destructive: 255 77 77;
     --button-blackwhite: 255 255 255;
     --button-blackwhite-foreground: 0 0 0;
-    --checkmark-foreground: 24 28 37;
+    --checkmark-foreground: 20 24 31;
     --checkmark: 255 255 255;
+    /* Trading theme colors */
+    --yellow-accent: 255 193 7;
+    --orange-accent: 255 152 0;
+    --cyan-accent: 0 255 136;
+    --pink-accent: 255 0 136;
+    --buy-button: 0 195 144;
   }
 }
 
