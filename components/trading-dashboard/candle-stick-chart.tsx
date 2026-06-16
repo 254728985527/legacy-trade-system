@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { SignalCircles } from './signal-circles';
+import { CandleSignalBoxes } from './candle-signal-boxes';
 import type { Candle } from '@/hooks/use-candle-data';
 
 interface CandleData {
@@ -70,11 +71,7 @@ export function CandleStickChart({
 
       <div className="flex justify-between items-center mb-4">
         <p className="text-[rgb(255,193,7)] text-sm font-bold">CANDLE</p>
-        <div className="flex gap-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="w-14 h-12 bg-white rounded-lg hover:opacity-80 transition-opacity cursor-pointer"></div>
-          ))}
-        </div>
+        <CandleSignalBoxes candles={candles} />
       </div>
 
       <div className="relative h-48 bg-[rgb(20,24,31)] rounded border border-[rgb(255,255,255,0.08)] mb-4">

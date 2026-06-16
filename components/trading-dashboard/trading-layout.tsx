@@ -9,6 +9,7 @@ import { ContractControls } from './contract-controls';
 import { TradeControlsPanel } from './trade-controls-panel';
 import { TransactionHistoryEnhanced } from './transaction-history-enhanced';
 import { AccountSwitcher } from './account-switcher';
+import { VolSelector } from './vol-selector';
 import { useFullTrading } from '@/hooks/use-full-trading';
 import type { ActiveSymbol, Tick, ProposalInfo } from '@deriv/core';
 
@@ -75,15 +76,13 @@ export function TradingLayout({
       {/* VOL Section */}
       <div className="w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5">
         <p className="text-[rgb(255,193,7)] text-sm font-bold mb-4">VOL</p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[rgb(0,255,136)] rounded-full flex items-center justify-center text-[rgb(20,24,31)] text-xs font-bold">10</div>
-            <button className="text-white hover:text-[rgb(255,193,7)] flex items-center gap-2 text-sm font-medium">
-              {activeSymbol?.display_name || 'Jump 10 Index'} <span className="text-gray-400">▼</span>
-            </button>
-          </div>
-          <span className="text-white font-bold text-lg">{currentPrice.toFixed(2)}</span>
-        </div>
+        <VolSelector
+          selectedId="jump-10"
+          selectedPrice={currentPrice}
+          onSelectionChange={(id, label) => {
+            console.log('[v0] Selected index:', label);
+          }}
+        />
       </div>
 
       {/* LDP Display */}

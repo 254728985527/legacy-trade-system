@@ -53,13 +53,34 @@ export function ContractControls({
   const [expandedContract, setExpandedContract] = useState<ContractType | null>(
     selectedContract
   );
+  const [showTypes, setShowTypes] = useState(true);
 
   const currentContract = CONTRACTS.find((c) => c.type === selectedContract);
 
   return (
     <div className="w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5 mb-6">
-      <p className="text-[rgb(255,193,7)] text-sm font-bold mb-4">CONTRACT TYPE</p>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[rgb(255,193,7)] text-sm font-bold">CONTRACT TYPE</p>
+        <button
+          onClick={() => setShowTypes(!showTypes)}
+          className="text-xs font-semibold px-3 py-1 rounded bg-[rgb(40,46,57)] hover:bg-[rgb(50,56,67)] text-gray-300 transition-all"
+        >
+          {showTypes ? '▲ Hide' : '▼ Show'}
+        </button>
+      </div>
 
+      {/* Selected Contract Display */}
+      {currentContract && (
+        <div className={`mb-4 p-3 bg-black/40 rounded-lg border-2 ${currentContract.color.replace('bg-', 'border-')} border-opacity-50`}>
+          <p className="text-gray-400 text-xs mb-1">SELECTED TRADE:</p>
+          <p className="text-white font-bold text-lg">
+            {currentContract.label} @ Barrier {selectedBarrier}
+          </p>
+        </div>
+      )}
+
+      {/* Contract Types List */}
+      {showTypes && (
       <div className="space-y-2">
         {CONTRACTS.map((contract) => (
           <div key={contract.type}>
@@ -109,14 +130,6 @@ export function ContractControls({
           </div>
         ))}
       </div>
-
-      {currentContract && (
-        <div className="mt-4 p-3 bg-black/30 rounded-lg border border-[rgb(255,193,7,0.2)]">
-          <p className="text-gray-400 text-xs mb-1">Selected Trade:</p>
-          <p className="text-[rgb(255,193,7)] font-bold">
-            {currentContract.label} @ Barrier {selectedBarrier}
-          </p>
-        </div>
       )}
     </div>
   );
