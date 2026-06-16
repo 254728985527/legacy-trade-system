@@ -31,6 +31,8 @@ export interface FullTradingState {
   setMartingaleEnabled: (enabled: boolean) => void;
   martingaleMultiplier: number;
   setMartingaleMultiplier: (multiplier: number) => void;
+  martingaleDigit: number;
+  setMartingaleDigit: (digit: number) => void;
   calculateNextStake: (lastWasLoss: boolean) => number;
 
   // Auto Trade
@@ -67,6 +69,7 @@ export function useFullTrading(): FullTradingState {
   const [baseStake, setBaseStake] = useState(1);
   const [martingaleEnabled, setMartingaleEnabled] = useState(false);
   const [martingaleMultiplier, setMartingaleMultiplier] = useState(2);
+  const [martingaleDigit, setMartingaleDigit] = useState(5);
   const lastWasLossRef = useRef(false);
 
   // Auto trade
@@ -182,6 +185,8 @@ export function useFullTrading(): FullTradingState {
     setMartingaleEnabled,
     martingaleMultiplier,
     setMartingaleMultiplier,
+    martingaleDigit,
+    setMartingaleDigit,
     calculateNextStake,
 
     // Auto Trade

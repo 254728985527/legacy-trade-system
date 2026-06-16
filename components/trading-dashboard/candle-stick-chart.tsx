@@ -17,13 +17,15 @@ interface CandleStickChartProps {
   candles?: Candle[];
   symbol?: string;
   isGlowingSignal?: boolean;
+  onSignalFire?: (direction: 'UP' | 'DOWN') => void;
 }
 
 export function CandleStickChart({ 
   currentPrice = 94582.04, 
   candles = [], 
   symbol = 'Jump 10 Index',
-  isGlowingSignal = false
+  isGlowingSignal = false,
+  onSignalFire
 }: CandleStickChartProps) {
   // Use real candle data or generate mock data
   const candleData = useMemo(() => {
@@ -64,7 +66,7 @@ export function CandleStickChart({
   return (
     <div className={`w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5 mb-6 ${isGlowingSignal ? 'ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/50' : ''}`}>
       {/* Signal Circles */}
-      <SignalCircles candles={candles} isGlowing={isGlowingSignal} />
+      <SignalCircles candles={candles} isGlowing={isGlowingSignal} onSignalFire={onSignalFire} />
 
       <div className="flex justify-between items-center mb-4">
         <p className="text-[rgb(255,193,7)] text-sm font-bold">CANDLE</p>

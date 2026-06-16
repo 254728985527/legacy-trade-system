@@ -10,6 +10,8 @@ interface TradeControlsPanelProps {
   onMartingaleToggle: (enabled: boolean) => void;
   martingaleMultiplier: number;
   onMultiplierChange: (multiplier: number) => void;
+  martingaleDigit?: number;
+  onMartingaleDigitChange?: (digit: number) => void;
   autoTradeEnabled: boolean;
   onAutoTradeToggle: (enabled: boolean) => void;
   onBuyClick: () => void;
@@ -22,12 +24,15 @@ export function TradeControlsPanel({
   onMartingaleToggle,
   martingaleMultiplier,
   onMultiplierChange,
+  martingaleDigit = 5,
+  onMartingaleDigitChange,
   autoTradeEnabled,
   onAutoTradeToggle,
   onBuyClick,
 }: TradeControlsPanelProps) {
   const [stakeInput, setStakeInput] = useState(baseStake.toString());
   const [multiplierInput, setMultiplierInput] = useState(martingaleMultiplier.toString());
+  const [digitInput, setDigitInput] = useState(martingaleDigit.toString());
 
   return (
     <div className="w-full bg-gradient-to-b from-[rgb(30,36,47)] to-[rgb(20,24,31)] rounded-lg p-5 mb-6">
@@ -70,24 +75,43 @@ export function TradeControlsPanel({
           <p className="text-[rgb(255,193,7)] text-sm font-bold">MARTINGALE</p>
         </label>
         {martingaleEnabled && (
-          <div className="flex items-center gap-2 ml-7">
-            <span className="text-gray-400 text-sm">Multiplier:</span>
-            <input
-              type="number"
-              value={multiplierInput}
-              onChange={(e) => {
-                setMultiplierInput(e.target.value);
-                onMultiplierChange(parseFloat(e.target.value) || 1);
-              }}
-              step="0.1"
-              className="flex-1 bg-[rgb(40,46,57)] text-white px-3 py-2 rounded border border-[rgb(255,193,7,0.2)] focus:border-[rgb(255,193,7)] focus:outline-none transition-colors"
-              placeholder="e.g., 2.0"
-            />
+          <div className="space-y-3 ml-7">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm min-w-fit">Multiplier:</span>
+              <input
+                type="number"
+                value={multiplierInput}
+                onChange={(e) => {
+                  setMultiplierInput(e.target.value);
+                  onMultiplierChange(parseFloat(e.target.value) || 1);
+                }}
+                step="0.1"
+                className="flex-1 bg-[rgb(40,46,57)] text-white px-3 py-2 rounded border border-[rgb(255,193,7,0.2)] focus:border-[rgb(255,193,7)] focus:outline-none transition-colors"
+                placeholder="e.g., 2.0"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm min-w-fit">Loss Digit (0-9):</span>
+              <select
+                value={digitInput}
+                onChange={(e) => {
+                  setDigitInput(e.target.value);
+                  onMartingaleDigitChange?.(parseInt(e.target.value));
+                }}
+                className="flex-1 bg-[rgb(40,46,57)] text-white px-3 py-2 rounded border border-[rgb(255,193,7,0.2)] focus:border-[rgb(255,193,7)] focus:outline-none transition-colors"
+              >
+                {Array.from({ length: 10 }, (_, i) => i).map((digit) => (
+                  <option key={digit} value={digit}>
+                    {digit}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
         {martingaleEnabled && (
-          <p className="text-gray-500 text-xs mt-2 ml-7">
-            On loss, next stake = {baseStake.toFixed(2)} × {martingaleMultiplier}
+          <p className="text-gray-500 text-xs mt-3 ml-7">
+            On loss digit {digitInput}, next stake = ${baseStake.toFixed(2)} × {martingaleMultiplier.toFixed(1)}
           </p>
         )}
       </div>

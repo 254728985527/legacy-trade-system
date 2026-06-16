@@ -52,6 +52,17 @@ export function TradingLayout({
     }
   }, [trading.isStrongSignal, trading.lastOverSignal, trading.lastUnderSignal]);
 
+  // Handle signal circle firing - auto-trade when all same color
+  const handleSignalFire = async (direction: 'UP' | 'DOWN') => {
+    if (trading.autoTradeEnabled) {
+      try {
+        await onBuy();
+      } catch (error) {
+        console.error('Auto-trade error:', error);
+      }
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
       {/* Account Switcher */}
@@ -92,6 +103,7 @@ export function TradingLayout({
         candles={trading.candles}
         symbol={activeSymbol?.display_name}
         isGlowingSignal={trading.isGlowingSignal}
+        onSignalFire={handleSignalFire}
       />
 
       {/* Transaction History */}
@@ -112,6 +124,8 @@ export function TradingLayout({
         onMartingaleToggle={trading.setMartingaleEnabled}
         martingaleMultiplier={trading.martingaleMultiplier}
         onMultiplierChange={trading.setMartingaleMultiplier}
+        martingaleDigit={trading.martingaleDigit}
+        onMartingaleDigitChange={trading.setMartingaleDigit}
         autoTradeEnabled={trading.autoTradeEnabled}
         onAutoTradeToggle={trading.setAutoTradeEnabled}
         onBuyClick={onBuy}

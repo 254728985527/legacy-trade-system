@@ -1,13 +1,15 @@
 'use client';
 
+import { useEffect } from 'react';
 import type { Candle } from '@/hooks/use-candle-data';
 
 interface SignalCirclesProps {
   candles: Candle[];
   isGlowing?: boolean;
+  onSignalFire?: (direction: 'UP' | 'DOWN') => void;
 }
 
-export function SignalCircles({ candles, isGlowing = false }: SignalCirclesProps) {
+export function SignalCircles({ candles, isGlowing = false, onSignalFire }: SignalCirclesProps) {
   // Get last 3 candles
   const last3 = candles.slice(-3);
 
@@ -29,6 +31,15 @@ export function SignalCircles({ candles, isGlowing = false }: SignalCirclesProps
   // Check if all 3 are same color
   const allGreen = circleData.every((d) => d.color === 'bg-emerald-500');
   const allRed = circleData.every((d) => d.color === 'bg-red-500');
+  const hasSignal = allGreen || allRed;
+
+  // Trigger trade signal when all circles are same color
+  useEffect(() => {
+    if (hasSignal && onSignalFire && candles.length >= 3) {
+      const direction = allGreen ? 'UP' : 'DOWN';
+      onSignalFire(direction);
+    }
+  }, [hasSignal, allGreen, onSignalFire, candles.length]);
 
   return (
     <div className="flex items-center gap-4 my-4">
@@ -41,7 +52,7 @@ export function SignalCircles({ candles, isGlowing = false }: SignalCirclesProps
             className={`relative w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xs transition-all ${
               data.color
             } ${
-              isGlowing && (allGreen || allRed)
+              isGlowing && hasSignal
                 ? 'shadow-lg shadow-current ring-2 ring-current animate-pulse'
                 : ''
             }`}
@@ -53,13 +64,13 @@ export function SignalCircles({ candles, isGlowing = false }: SignalCirclesProps
       </div>
 
       {allGreen && (
-        <div className="ml-4 text-emerald-400 text-sm font-bold">
-          STRONG UPTREND
+        <div className={`ml-4 text-emerald-400 text-sm font-bold ${isGlowing ? 'animate-pulse' : ''}`}>
+          ✓ STRONG UPTREND
         </div>
       )}
       {allRed && (
-        <div className="ml-4 text-red-400 text-sm font-bold">
-          STRONG DOWNTREND
+        <div className={`ml-4 text-red-400 text-sm font-bold ${isGlowing ? 'animate-pulse' : ''}`}>
+          ✓ STRONG DOWNTREND
         </div>
       )}
     </div>
