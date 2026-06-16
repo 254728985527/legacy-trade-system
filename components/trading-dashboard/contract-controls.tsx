@@ -104,18 +104,25 @@ export function ContractControls({
               />
             </button>
 
-            {/* Barrier Panel */}
+            {/* Barrier Panel - Separate for Each Contract Type */}
             {expandedContract === contract.type && (
-              <div className="bg-[rgb(25,30,40)] rounded-lg p-4 mt-2 animate-in fade-in slide-in-from-top-2">
-                <p className="text-gray-400 text-xs font-semibold mb-3 uppercase">
-                  Select Barrier (0-9)
-                </p>
+              <div className={`rounded-lg p-4 mt-2 animate-in fade-in slide-in-from-top-2 border-l-4 ${
+                contract.color.replace('bg-', 'border-')
+              } bg-[rgb(25,30,40)]`}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-gray-400 text-xs font-semibold uppercase">
+                    Barrier for {contract.label}
+                  </p>
+                  <p className="text-[rgb(255,193,7)] text-xs font-bold">
+                    Current: {selectedBarrier}
+                  </p>
+                </div>
                 <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: 10 }, (_, i) => i).map((digit) => (
                     <button
                       key={digit}
                       onClick={() => onBarrierChange(digit)}
-                      className={`py-2 rounded font-bold transition-all ${
+                      className={`py-2 rounded font-bold transition-all text-sm ${
                         selectedBarrier === digit
                           ? 'bg-[rgb(255,193,7)] text-black shadow-lg scale-110'
                           : 'bg-gray-700 text-white hover:bg-gray-600'
