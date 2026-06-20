@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/custom/theme-toggle';
 import { CandlestickChart } from './candlestick-chart';
 import type { OHLC, IncomingTick } from './candlestick-chart';
 import { ThreeUpModal } from './three-up-modal';
+import { DirectionCircles } from './direction-circles';
 import type {
   AuthState,
   DerivAccount,
@@ -214,27 +215,32 @@ export function DigitsView({
               <Card className="border shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex flex-col space-y-4 h-full">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">LDP (Last 10 Digits)</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {lastTenDigits.map((item, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              'w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all',
-                              item.direction === 'up'
-                                ? 'bg-[#00C390]/20 border border-[#00C390] text-[#00C390]'
-                                : 'bg-[#DE0040]/20 border border-[#DE0040] text-[#DE0040]'
-                            )}
-                            title={`Price: ${item.price.toFixed(2)}`}
-                          >
-                            {item.digit}
-                          </div>
-                        ))}
-                        {lastTenDigits.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Waiting for ticks...</p>
-                        )}
+                      <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">LDP (Last 10 Digits)</p>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {lastTenDigits.map((item, i) => (
+                            <div
+                              key={i}
+                              className={cn(
+                                'w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all',
+                                item.direction === 'up'
+                                  ? 'bg-[#00C390]/20 border border-[#00C390] text-[#00C390]'
+                                  : 'bg-[#DE0040]/20 border border-[#DE0040] text-[#DE0040]'
+                              )}
+                              title={`Price: ${item.price.toFixed(2)}`}
+                            >
+                              {item.digit}
+                            </div>
+                          ))}
+                          {lastTenDigits.length === 0 && (
+                            <p className="text-xs text-muted-foreground">Waiting for ticks...</p>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Direction indicator circles */}
+                      <DirectionCircles incomingTicks={incomingTicks} />
                     </div>
                     {/* Candlestick chart */}
                     <div className="flex-1">

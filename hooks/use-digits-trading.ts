@@ -19,6 +19,9 @@ import { computeDigitStats, getLastDigit } from '../lib/digit-stats';
 import type { ContractMode, TradeType, DigitStats, OpenPosition, ClosedPosition } from '../lib/types';
 import type { OHLC, IncomingTick } from '@/components/candlestick-chart';
 
+// Re-export for type safety
+export type { OHLC };
+
 const CONTRACT_TYPES = ['DIGITMATCH', 'DIGITDIFF', 'DIGITOVER', 'DIGITUNDER', 'DIGITEVEN', 'DIGITODD'];
 
 interface UseDigitsTradingReturn {
@@ -199,44 +202,26 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
       { digit: currentDigit, direction, price: currentTick.quote }
     ]);
 
-    // Update candlestick data (aggregate every 5 ticks or 60 seconds)
+    // Update candlestick data - one candle per tick
     setCandleData(prev => {
       const now = Date.now();
-      let updatedCandles = [...prev];
+      const digit = getLastDigit(currentTick.quote, pipSize);
+      const signal: 'EVEN' | 'ODD' = digit % 2 === 0 ? 'EVEN' : 'ODD';
 
-      if (updatedCandles.length === 0) {
-        // Create first candle
-        updatedCandles = [{
-          timestamp: now,
-          open: currentTick.quote,
-          high: currentTick.quote,
-          low: currentTick.quote,
-          close: currentTick.quote,
-        }];
-      } else {
-        const lastCandle = updatedCandles[updatedCandles.length - 1];
+      // Create a new candle for each tick
+      const newCandle: OHLC = {
+        timestamp: now,
+        open: currentTick.quote,
+        high: currentTick.quote,
+        low: currentTick.quote,
+        close: currentTick.quote,
+        digit,
+        signal,
+        direction: direction as 'up' | 'down',
+      };
 
-        // Update last candle
-        lastCandle.high = Math.max(lastCandle.high, currentTick.quote);
-        lastCandle.low = Math.min(lastCandle.low, currentTick.quote);
-        lastCandle.close = currentTick.quote;
-
-        // Create new candle every 5 ticks
-        if ((updatedCandles[updatedCandles.length - 1].close !== currentTick.quote &&
-             prices.filter(p => p === currentTick.quote).length % 5 === 0) ||
-            (now - lastCandle.timestamp > 60000)) {
-          updatedCandles.push({
-            timestamp: now,
-            open: currentTick.quote,
-            high: currentTick.quote,
-            low: currentTick.quote,
-            close: currentTick.quote,
-          });
-        }
-      }
-
-      // Keep last 20 candles
-      return updatedCandles.slice(-20);
+      // Keep last 50 candles for better history
+      return [...prev.slice(-49), newCandle];
     });
 
     // TURBO mode: auto-buy on matching digits

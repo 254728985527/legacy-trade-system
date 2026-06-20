@@ -8,6 +8,9 @@ export interface OHLC {
   high: number;
   low: number;
   close: number;
+  digit?: number;
+  signal?: 'EVEN' | 'ODD';
+  direction?: 'up' | 'down';
 }
 
 export interface IncomingTick {
@@ -106,7 +109,7 @@ export function CandlestickChart({
         {/* X-axis */}
         <line x1="30" y1={height - 20} x2={width - 10} y2={height - 20} stroke="rgb(100, 100, 120)" strokeWidth="1" opacity="0.5" />
 
-        {/* Candlesticks */}
+        {/* Candlesticks with EVEN/ODD signals */}
         {candleData.map((candle, i) => {
           const x = 35 + i * (candleWidth + spacing);
           const o = priceToY(candle.open);
@@ -118,6 +121,9 @@ export function CandlestickChart({
           const bodyTop = Math.min(o, c);
           const bodyHeight = Math.abs(c - o) || 2;
           const color = isUp ? 'rgb(0, 195, 144)' : 'rgb(222, 0, 64)';
+          
+          // Signal color: blue for EVEN, orange for ODD
+          const signalColor = candle.signal === 'EVEN' ? 'rgb(0, 81, 255)' : 'rgb(255, 136, 0)';
 
           return (
             <g key={i} opacity="0.9">
@@ -135,6 +141,35 @@ export function CandlestickChart({
                 strokeWidth="1"
                 opacity="0.8"
               />
+
+              {/* EVEN/ODD Signal label */}
+              {candle.signal && (
+                <text
+                  x={x + candleWidth / 2}
+                  y={bodyTop - 5}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fontWeight="bold"
+                  fill={signalColor}
+                  opacity="0.9"
+                >
+                  {candle.signal === 'EVEN' ? 'E' : 'O'}
+                </text>
+              )}
+              
+              {/* Digit label */}
+              {candle.digit !== undefined && (
+                <text
+                  x={x + candleWidth / 2}
+                  y={height - 5}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="rgb(150, 150, 170)"
+                  opacity="0.7"
+                >
+                  {candle.digit}
+                </text>
+              )}
             </g>
           );
         })}
