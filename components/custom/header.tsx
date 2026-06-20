@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { AuthState, DerivAccount } from '@deriv/core';
+import type { AuthState, DerivAccount, ActiveSymbol } from '@deriv/core';
 
 interface HeaderProps {
   authState: AuthState;
@@ -23,6 +23,16 @@ interface HeaderProps {
   appName?: string;
   /** Optional controls rendered to the left of the login/logout button (e.g. a theme toggle). */
   actions?: React.ReactNode;
+  /** Active symbol for display */
+  activeSymbol?: ActiveSymbol | null;
+  /** Current price/tick for display */
+  currentPrice?: number | null;
+  /** Available symbols for dropdown */
+  symbols?: ActiveSymbol[];
+  /** Callback for symbol selection */
+  onSymbolChange?: (symbol: string) => void;
+  /** Last digit for display */
+  lastDigit?: number | null;
 }
 
 function formatBalance(balance: string): string {
@@ -53,8 +63,14 @@ export function Header({
   logoSrc,
   appName,
   actions,
+  activeSymbol,
+  currentPrice,
+  symbols,
+  onSymbolChange,
+  lastDigit,
 }: HeaderProps) {
   const [logoError, setLogoError] = useState(false);
+  const [symbolDropdownOpen, setSymbolDropdownOpen] = useState(false);
   const logoLetter = (appName ?? process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading')
     .trim()
     .charAt(0)
@@ -64,14 +80,13 @@ export function Header({
   const isAuthenticating = authState === 'authenticating';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b bg-background/80 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b border-border bg-background">
       <div className="flex items-center gap-3">
         {!logoSrc || logoError ? (
           <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
             {logoLetter}
           </div>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- next/image is avoided here intentionally: it errors in the optimizer when /logo.png is absent locally; a plain img with onError gives the same silent fallback behaviour
           <img
             src={logoSrc}
             alt="App Logo"
@@ -83,6 +98,71 @@ export function Header({
           {process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading'}
         </h1>
       </div>
+
+      {/* Center: Symbol selector and Price display */}
+      <div className="flex flex-1 items-center justify-center gap-6">
+        {symbols && onSymbolChange && (
+          <Popover open={symbolDropdownOpen} onOpenChange={setSymbolDropdownOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                <span className="text-sm font-medium text-foreground">
+                  {activeSymbol?.display_name ?? 'Select Symbol'}
+                </span>
+                <svg
+                  className={cn(
+                    'w-4 h-4 text-muted-foreground transition-transform',
+                    symbolDropdownOpen && 'rotate-180'
+                  )}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="center" className="w-72 p-2">
+              <div className="space-y-1 max-h-96 overflow-y-auto">
+                {symbols.map((symbol) => (
+                  <button
+                    key={symbol.symbol}
+                    onClick={() => {
+                      onSymbolChange(symbol.symbol);
+                      setSymbolDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full text-left rounded-lg px-3 py-2.5 transition-colors',
+                      symbol.symbol === activeSymbol?.symbol
+                        ? 'bg-primary/10'
+                        : 'hover:bg-muted/50'
+                    )}
+                  >
+                    <p className="text-sm font-medium text-foreground">{symbol.display_name}</p>
+                    <p className="text-xs text-muted-foreground">{symbol.symbol}</p>
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {/* Current price display */}
+        {currentPrice !== null && currentPrice !== undefined && (
+          <div className="text-center">
+            <div className="text-5xl font-bold text-foreground tracking-tight tabular-nums">
+              {currentPrice.toFixed(2)}
+            </div>
+            {lastDigit !== null && lastDigit !== undefined && (
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Last Digit: <span className="inline-flex w-5 h-5 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">{lastDigit}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Right: Theme toggle, account switcher, auth buttons */}
       <div className="flex items-center gap-3">
         {actions}
         {isAuthenticated && activeAccount && (
@@ -136,7 +216,7 @@ export function Header({
           </Popover>
         )}
         {isAuthenticated ? (
-          <Button variant="destructive" onClick={onLogout}>
+          <Button variant="destructive" size="sm" onClick={onLogout}>
             Logout
           </Button>
         ) : (

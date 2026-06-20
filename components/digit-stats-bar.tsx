@@ -19,34 +19,34 @@ export function DigitStatsBar({
   const minPct = Math.min(...digitStats.percentages);
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      <span className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
+    <div className="space-y-3">
+      <span className="text-xs text-muted-foreground block">
         Last digit prediction
       </span>
-      <div className="flex-1 flex items-center min-h-0">
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-3 place-items-center w-full">
+      <div className="grid grid-cols-10 gap-2 place-items-center w-full">
         {digitStats.percentages.map((pct, digit) => {
           const isSelected = digit === selectedDigit;
           const isHighest = digitStats.totalTicks > 0 && pct === maxPct;
           const isLowest = digitStats.totalTicks > 0 && pct === minPct;
 
           return (
-            <div key={digit} className="flex flex-col items-center gap-1 sm:gap-1.5">
+            <div key={digit} className="flex flex-col items-center gap-1.5 w-full">
               <Button
                 variant={isSelected ? 'default' : 'outline'}
                 onClick={() => onDigitSelect(digit)}
                 className={cn(
-                  'w-11 h-11 sm:w-14 sm:h-14 text-base sm:text-xl font-semibold rounded-lg p-0',
-                  !isSelected && 'bg-muted/50 border-muted-foreground/20'
+                  'w-10 h-10 text-sm font-semibold rounded-lg p-0',
+                  isSelected && 'bg-primary text-white',
+                  !isSelected && 'bg-muted/40 border-muted-foreground/30 text-foreground hover:bg-muted/60'
                 )}
               >
                 {digit}
               </Button>
               <span
                 className={cn(
-                  'text-xs font-mono',
-                  isHighest && 'text-green-500 font-semibold',
-                  isLowest && 'text-red-500 font-semibold',
+                  'text-[10px] font-mono text-center leading-tight',
+                  isHighest && 'text-[#00C390] font-semibold',
+                  isLowest && 'text-[#DE0040] font-semibold',
                   !isHighest && !isLowest && 'text-muted-foreground'
                 )}
               >
@@ -55,7 +55,6 @@ export function DigitStatsBar({
             </div>
           );
         })}
-        </div>
       </div>
     </div>
   );

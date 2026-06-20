@@ -113,25 +113,6 @@ export function TradeControls({
 
   return (
     <div className="space-y-2 sm:space-y-4">
-      <ToggleGroup
-        type="single"
-        value={contractMode}
-        onValueChange={value => {
-          if (value) onContractModeChange(value as ContractMode);
-        }}
-        className="w-full gap-0 rounded-full bg-muted p-1"
-      >
-        {modeOptions.map(opt => (
-          <ToggleGroupItem
-            key={opt.value}
-            value={opt.value}
-            className="flex-1 rounded-full text-sm font-medium text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:font-bold data-[state=on]:shadow-sm hover:text-foreground"
-          >
-            {opt.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="stake" className="text-xs text-muted-foreground">
@@ -198,10 +179,10 @@ export function TradeControls({
         )}
       </div>
 
-      {/* Buy button — fixed above footer on mobile, inline on desktop */}
-      <div className="max-lg:fixed max-lg:bottom-[calc(env(safe-area-inset-bottom)+2.5rem)] max-lg:left-3 max-lg:right-3 lg:static">
+      {/* Buy buttons */}
+      <div className="space-y-2">
         <Button
-          className="w-full h-10 rounded-full px-6 sm:h-11 sm:px-8"
+          className="w-full h-11 rounded-lg px-6 bg-primary hover:bg-primary/90 text-white font-semibold"
           disabled={!isConnected || !proposal || isBuying}
           onClick={onBuy}
         >
@@ -210,6 +191,14 @@ export function TradeControls({
             : proposal
               ? `Buy @ ${proposal.askPrice.toFixed(2)} USD`
               : 'Buy Contract'}
+        </Button>
+
+        <Button
+          className="w-full h-11 rounded-lg px-6 bg-[#FF8800] hover:bg-[#FF8800]/90 text-white font-semibold"
+          disabled={!isConnected || isBuying}
+          onClick={onBuy}
+        >
+          TURBO ALL DIGITS
         </Button>
       </div>
 
