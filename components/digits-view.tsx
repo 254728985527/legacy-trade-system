@@ -10,6 +10,8 @@ import { DigitStatsBar } from './digit-stats-bar';
 import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
+import { CandlestickChart } from './candlestick-chart';
+import type { OHLC, IncomingTick } from './candlestick-chart';
 import type {
   AuthState,
   DerivAccount,
@@ -70,6 +72,12 @@ export interface DigitsViewProps {
   buyResult: BuyResult | null;
   buyError: string | null;
   clearBuyResult: () => void;
+  // TURBO mode
+  turboMode: boolean;
+  setTurboMode: (enabled: boolean) => void;
+  // Chart data
+  candleData: OHLC[];
+  incomingTicks: IncomingTick[];
   // Branding (used by preview route; no-op in the real app)
   logoSrc?: string;
   appName?: string;
@@ -111,6 +119,10 @@ export function DigitsView({
   buyResult,
   buyError,
   clearBuyResult,
+  turboMode,
+  setTurboMode,
+  candleData,
+  incomingTicks,
   logoSrc,
   appName,
 }: DigitsViewProps) {
@@ -171,24 +183,33 @@ export function DigitsView({
               {/* Left Column: Chart/LDP */}
               <Card className="border shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex flex-col space-y-4">
+                  <div className="flex flex-col space-y-4 h-full">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-2">CANDLE - 1m</p>
+                      <p className="text-xs text-muted-foreground mb-2">LDP</p>
                       <div className="flex gap-1.5 flex-wrap">
-                        <div className="w-8 h-8 rounded bg-[#00C390]/20 border border-[#00C390] flex items-center justify-center text-xs font-bold text-[#00C390]">8</div>
-                        <div className="w-8 h-8 rounded bg-[#DE0040]/20 border border-[#DE0040] flex items-center justify-center text-xs font-bold text-[#DE0040]">1</div>
-                        <div className="w-8 h-8 rounded bg-[#00C390]/20 border border-[#00C390] flex items-center justify-center text-xs font-bold text-[#00C390]">9</div>
-                        <div className="w-8 h-8 rounded bg-[#DE0040]/20 border border-[#DE0040] flex items-center justify-center text-xs font-bold text-[#DE0040]">2</div>
-                        <div className="w-8 h-8 rounded bg-[#DE0040]/20 border border-[#DE0040] flex items-center justify-center text-xs font-bold text-[#DE0040]">1</div>
-                        <div className="w-8 h-8 rounded bg-[#00C390]/20 border border-[#00C390] flex items-center justify-center text-xs font-bold text-[#00C390]">5</div>
-                        <div className="w-8 h-8 rounded bg-[#FF8800]/20 border border-[#FF8800] flex items-center justify-center text-xs font-bold text-[#FF8800]">4</div>
-                        <div className="w-8 h-8 rounded bg-[#00C390]/20 border border-[#00C390] flex items-center justify-center text-xs font-bold text-[#00C390]">7</div>
-                        <div className="w-8 h-8 rounded bg-[#00C390]/20 border border-[#00C390] flex items-center justify-center text-xs font-bold text-[#00C390]">5</div>
+                        {incomingTicks.slice(0, 9).map((tick, i) => (
+                          <div
+                            key={i}
+                            className={cn(
+                              'w-8 h-8 rounded flex items-center justify-center text-xs font-bold',
+                              tick.direction === 'up'
+                                ? 'bg-[#00C390]/20 border border-[#00C390] text-[#00C390]'
+                                : 'bg-[#DE0040]/20 border border-[#DE0040] text-[#DE0040]'
+                            )}
+                          >
+                            {Math.floor(Math.random() * 10)}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    {/* Chart area - placeholder */}
-                    <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center text-muted-foreground text-sm">
-                      Chart Area
+                    {/* Candlestick chart */}
+                    <div className="flex-1">
+                      <CandlestickChart
+                        candleData={candleData}
+                        incomingTicks={incomingTicks}
+                        width={320}
+                        height={220}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -290,6 +311,8 @@ export function DigitsView({
                     buyError={buyError}
                     onClearBuyResult={clearBuyResult}
                     isAuthenticated={authState === 'authenticated'}
+                    turboMode={turboMode}
+                    onTurboModeChange={setTurboMode}
                   />
                 </CardContent>
               </Card>

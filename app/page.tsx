@@ -50,6 +50,10 @@ export default function DigitsPage() {
       buyResult={trading.buyResult}
       buyError={trading.buyError}
       clearBuyResult={trading.clearBuyResult}
+      turboMode={trading.turboMode}
+      setTurboMode={trading.setTurboMode}
+      candleData={trading.candleData}
+      incomingTicks={trading.incomingTicks}
     />
   );
 }

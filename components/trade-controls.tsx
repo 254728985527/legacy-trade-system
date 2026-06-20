@@ -35,6 +35,8 @@ interface TradeControlsProps {
   buyError: string | null;
   onClearBuyResult: () => void;
   isAuthenticated?: boolean;
+  turboMode?: boolean;
+  onTurboModeChange?: (enabled: boolean) => void;
 }
 
 const CONTRACT_MODE_OPTIONS: Record<TradeType, { value: ContractMode; label: string }[]> = {
@@ -92,6 +94,8 @@ export function TradeControls({
   buyError,
   onClearBuyResult,
   isAuthenticated,
+  turboMode = false,
+  onTurboModeChange,
 }: TradeControlsProps) {
   useEffect(() => {
     if (buyError) {
@@ -194,11 +198,15 @@ export function TradeControls({
         </Button>
 
         <Button
-          className="w-full h-11 rounded-lg px-6 bg-[#FF8800] hover:bg-[#FF8800]/90 text-white font-semibold"
-          disabled={!isConnected || isBuying}
-          onClick={onBuy}
+          className={`w-full h-11 rounded-lg px-6 font-semibold transition-all ${
+            turboMode
+              ? 'bg-[#FF8800] hover:bg-[#FF8800]/90 text-white'
+              : 'bg-[#FF8800]/20 hover:bg-[#FF8800]/30 text-[#FF8800] border border-[#FF8800]'
+          }`}
+          disabled={!isConnected}
+          onClick={() => onTurboModeChange?.(!turboMode)}
         >
-          TURBO ALL DIGITS
+          {turboMode ? 'TURBO ON' : 'TURBO OFF'}
         </Button>
       </div>
 

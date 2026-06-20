@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   useProposal,
   useBuy,
@@ -17,6 +17,7 @@ import { useBaseTrading } from '@/hooks/use-base-trading';
 import type { UseBaseTradingParams } from '@/hooks/use-base-trading';
 import { computeDigitStats, getLastDigit } from '../lib/digit-stats';
 import type { ContractMode, TradeType, DigitStats, OpenPosition, ClosedPosition } from '../lib/types';
+import type { OHLC, IncomingTick } from '@/components/candlestick-chart';
 
 const CONTRACT_TYPES = ['DIGITMATCH', 'DIGITDIFF', 'DIGITOVER', 'DIGITUNDER', 'DIGITEVEN', 'DIGITODD'];
 
@@ -57,6 +58,13 @@ interface UseDigitsTradingReturn {
   sellingId: number | null;
   sellError: string | null;
   clearSellError: () => void;
+  // TURBO mode
+  turboMode: boolean;
+  setTurboMode: (enabled: boolean) => void;
+  // Chart data
+  candleData: OHLC[];
+  incomingTicks: IncomingTick[];
+  prices: number[];
 }
 
 export type UseDigitsTradingParams = Pick<UseBaseTradingParams, 'ws' | 'isConnected' | 'isExhausted' | 'isAuthenticated' | 'onAuthWSFailed'>;
@@ -90,6 +98,9 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
   const [selectedDigit, setSelectedDigit] = useState<number>(5);
   const [stake, setStake] = useState<string>('10');
   const [duration, setDuration] = useState<number>(5);
+  const [turboMode, setTurboMode] = useState<boolean>(false);
+  const [incomingTicks, setIncomingTicks] = useState<IncomingTick[]>([]);
+  const [candleData, setCandleData] = useState<OHLC[]>([]);
 
   // Reset contract mode to the first option of the selected trade type
   const setTradeType = useCallback((type: TradeType) => {
@@ -160,6 +171,83 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
     }
   }, [proposal, buyWithProposal]);
 
+  // Track incoming ticks and update candlestick data
+  useEffect(() => {
+    if (!currentTick || prices.length < 2) return;
+
+    const lastPrice = prices[prices.length - 1];
+    const prevPrice = prices[prices.length - 2];
+
+    // Determine direction
+    const direction: 'up' | 'down' = currentTick.quote >= lastPrice ? 'up' : 'down';
+
+    // Add incoming tick
+    const newTick: IncomingTick = {
+      price: currentTick.quote,
+      direction,
+      timestamp: Date.now(),
+    };
+
+    setIncomingTicks(prev => [...prev.slice(-2), newTick]); // Keep last 3 ticks
+
+    // Update candlestick data (aggregate every 5 ticks or 60 seconds)
+    setCandleData(prev => {
+      const now = Date.now();
+      let updatedCandles = [...prev];
+
+      if (updatedCandles.length === 0) {
+        // Create first candle
+        updatedCandles = [{
+          timestamp: now,
+          open: currentTick.quote,
+          high: currentTick.quote,
+          low: currentTick.quote,
+          close: currentTick.quote,
+        }];
+      } else {
+        const lastCandle = updatedCandles[updatedCandles.length - 1];
+
+        // Update last candle
+        lastCandle.high = Math.max(lastCandle.high, currentTick.quote);
+        lastCandle.low = Math.min(lastCandle.low, currentTick.quote);
+        lastCandle.close = currentTick.quote;
+
+        // Create new candle every 5 ticks
+        if ((updatedCandles[updatedCandles.length - 1].close !== currentTick.quote &&
+             prices.filter(p => p === currentTick.quote).length % 5 === 0) ||
+            (now - lastCandle.timestamp > 60000)) {
+          updatedCandles.push({
+            timestamp: now,
+            open: currentTick.quote,
+            high: currentTick.quote,
+            low: currentTick.quote,
+            close: currentTick.quote,
+          });
+        }
+      }
+
+      // Keep last 20 candles
+      return updatedCandles.slice(-20);
+    });
+
+    // TURBO mode: auto-buy on matching digits
+    if (turboMode && proposal && !isBuying) {
+      const currentDigit = getLastDigit(currentTick.quote, pipSize);
+
+      if (contractMode === 'DIGITUNDER' && currentDigit < selectedDigit) {
+        buyWithProposal(proposal).catch(err => console.error('[v0] TURBO buy failed:', err));
+      } else if (contractMode === 'DIGITOVER' && currentDigit > selectedDigit) {
+        buyWithProposal(proposal).catch(err => console.error('[v0] TURBO buy failed:', err));
+      } else if (contractMode === 'DIGITMATCH' && currentDigit === selectedDigit) {
+        buyWithProposal(proposal).catch(err => console.error('[v0] TURBO buy failed:', err));
+      } else if (contractMode === 'DIGITEVEN' && currentDigit % 2 === 0) {
+        buyWithProposal(proposal).catch(err => console.error('[v0] TURBO buy failed:', err));
+      } else if (contractMode === 'DIGITODD' && currentDigit % 2 !== 0) {
+        buyWithProposal(proposal).catch(err => console.error('[v0] TURBO buy failed:', err));
+      }
+    }
+  }, [currentTick, prices, pipSize, turboMode, proposal, isBuying, contractMode, selectedDigit, buyWithProposal]);
+
   return {
     isConnected,
     isLoading,
@@ -197,5 +285,10 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
     sellingId,
     sellError,
     clearSellError,
+    turboMode,
+    setTurboMode,
+    candleData,
+    incomingTicks,
+    prices,
   };
 }
