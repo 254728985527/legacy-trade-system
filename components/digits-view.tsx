@@ -240,7 +240,14 @@ export function DigitsView({
                       </div>
 
                       {/* Direction indicator circles */}
-                      <DirectionCircles incomingTicks={incomingTicks} />
+                      <DirectionCircles 
+                        candleData={candleData}
+                        onThreeRisesDetected={(signal) => {
+                          if (signal) {
+                            console.log('[v0] Three rises signal received from DirectionCircles');
+                          }
+                        }}
+                      />
                     </div>
                     {/* Candlestick chart */}
                     <div className="flex-1">
