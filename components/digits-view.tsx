@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
 import { CandlestickChart } from './candlestick-chart';
 import type { OHLC, IncomingTick } from './candlestick-chart';
+import { ThreeUpModal } from './three-up-modal';
 import type {
   AuthState,
   DerivAccount,
@@ -78,6 +80,7 @@ export interface DigitsViewProps {
   // Chart data
   candleData: OHLC[];
   incomingTicks: IncomingTick[];
+  lastTenDigits: { digit: number; direction: 'up' | 'down'; price: number }[];
   // Branding (used by preview route; no-op in the real app)
   logoSrc?: string;
   appName?: string;
@@ -123,9 +126,36 @@ export function DigitsView({
   setTurboMode,
   candleData,
   incomingTicks,
+  lastTenDigits,
   logoSrc,
   appName,
 }: DigitsViewProps) {
+  const [threeUpModalOpen, setThreeUpModalOpen] = useState(false);
+  const [threeUpLastDigit, setThreeUpLastDigit] = useState<number | null>(null);
+
+  const handleThreeUpTicks = (lastDigit: number) => {
+    setThreeUpLastDigit(lastDigit);
+    setThreeUpModalOpen(true);
+  };
+
+  const handleTradeEven = () => {
+    // Set contract mode to EVEN and buy
+    setContractMode('DIGITEVEN');
+    setTimeout(() => {
+      buyContract();
+      setThreeUpModalOpen(false);
+    }, 100);
+  };
+
+  const handleTradeOdd = () => {
+    // Set contract mode to ODD and buy
+    setContractMode('DIGITODD');
+    setTimeout(() => {
+      buyContract();
+      setThreeUpModalOpen(false);
+    }, 100);
+  };
+
   if (error) {
     return (
       <main className="flex flex-col bg-background items-center justify-center px-4 min-h-dvh">
@@ -185,21 +215,25 @@ export function DigitsView({
                 <CardContent className="p-4">
                   <div className="flex flex-col space-y-4 h-full">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-2">LDP</p>
+                      <p className="text-xs text-muted-foreground mb-2">LDP (Last 10 Digits)</p>
                       <div className="flex gap-1.5 flex-wrap">
-                        {incomingTicks.slice(0, 9).map((tick, i) => (
+                        {lastTenDigits.map((item, i) => (
                           <div
                             key={i}
                             className={cn(
-                              'w-8 h-8 rounded flex items-center justify-center text-xs font-bold',
-                              tick.direction === 'up'
+                              'w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all',
+                              item.direction === 'up'
                                 ? 'bg-[#00C390]/20 border border-[#00C390] text-[#00C390]'
                                 : 'bg-[#DE0040]/20 border border-[#DE0040] text-[#DE0040]'
                             )}
+                            title={`Price: ${item.price.toFixed(2)}`}
                           >
-                            {Math.floor(Math.random() * 10)}
+                            {item.digit}
                           </div>
                         ))}
+                        {lastTenDigits.length === 0 && (
+                          <p className="text-xs text-muted-foreground">Waiting for ticks...</p>
+                        )}
                       </div>
                     </div>
                     {/* Candlestick chart */}
@@ -209,6 +243,7 @@ export function DigitsView({
                         incomingTicks={incomingTicks}
                         width={320}
                         height={220}
+                        onThreeUpTicks={handleThreeUpTicks}
                       />
                     </div>
                   </div>
@@ -325,6 +360,20 @@ export function DigitsView({
       <div className="fixed bottom-0 left-0 right-0 py-2 text-center bg-background/80 backdrop-blur-sm border-t border-border">
         <Footer />
       </div>
+
+      {/* Three Up Ticks Modal */}
+      {threeUpLastDigit !== null && (
+        <ThreeUpModal
+          isOpen={threeUpModalOpen}
+          onClose={() => setThreeUpModalOpen(false)}
+          lastDigit={threeUpLastDigit}
+          candleData={candleData}
+          incomingTicks={incomingTicks}
+          onTradeEven={handleTradeEven}
+          onTradeOdd={handleTradeOdd}
+          isTrading={isBuying}
+        />
+      )}
     </main>
   );
 }

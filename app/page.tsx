@@ -54,6 +54,7 @@ export default function DigitsPage() {
       setTurboMode={trading.setTurboMode}
       candleData={trading.candleData}
       incomingTicks={trading.incomingTicks}
+      lastTenDigits={trading.lastTenDigits}
     />
   );
 }

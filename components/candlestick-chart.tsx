@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 export interface OHLC {
   timestamp: number;
@@ -21,6 +21,7 @@ interface CandlestickChartProps {
   incomingTicks: IncomingTick[];
   width?: number;
   height?: number;
+  onThreeUpTicks?: (lastDigit: number) => void;
 }
 
 export function CandlestickChart({
@@ -28,6 +29,7 @@ export function CandlestickChart({
   incomingTicks,
   width = 400,
   height = 240,
+  onThreeUpTicks,
 }: CandlestickChartProps) {
   const { minPrice, maxPrice, candleWidth, spacing } = useMemo(() => {
     if (candleData.length === 0) {
@@ -57,12 +59,29 @@ export function CandlestickChart({
     return height - 20 - ((price - minPrice) / range) * (height - 40);
   };
 
+  const [lastThreeUpsDetected, setLastThreeUpsDetected] = useState(false);
+
   const getRecentTicks = () => {
     const now = Date.now();
     return incomingTicks.filter(t => now - t.timestamp < 60000).slice(-3); // Last 3 ticks in 60 seconds
   };
 
   const recentTicks = getRecentTicks();
+
+  // Detect 3 consecutive up ticks
+  useEffect(() => {
+    if (incomingTicks.length >= 3 && !lastThreeUpsDetected) {
+      const lastThree = incomingTicks.slice(-3);
+      const allUp = lastThree.every(t => t.direction === 'up');
+      
+      if (allUp) {
+        setLastThreeUpsDetected(true);
+        // Calculate last digit from the most recent tick
+        const lastDigit = Math.floor(lastThree[2].price * 10) % 10;
+        onThreeUpTicks?.(lastDigit);
+      }
+    }
+  }, [incomingTicks, lastThreeUpsDetected, onThreeUpTicks]);
 
   return (
     <div className="w-full h-full bg-muted/20 rounded-lg p-4 flex items-center justify-center">

@@ -71,6 +71,7 @@ export function Header({
 }: HeaderProps) {
   const [logoError, setLogoError] = useState(false);
   const [symbolDropdownOpen, setSymbolDropdownOpen] = useState(false);
+  const [symbolCategory, setSymbolCategory] = useState<'all' | 'volatility' | 'indices'>('all');
   const logoLetter = (appName ?? process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading')
     .trim()
     .charAt(0)
@@ -122,26 +123,60 @@ export function Header({
                 </svg>
               </button>
             </PopoverTrigger>
-            <PopoverContent align="center" className="w-72 p-2">
-              <div className="space-y-1 max-h-96 overflow-y-auto">
-                {symbols.map((symbol) => (
-                  <button
-                    key={symbol.symbol}
-                    onClick={() => {
-                      onSymbolChange(symbol.symbol);
-                      setSymbolDropdownOpen(false);
-                    }}
-                    className={cn(
-                      'w-full text-left rounded-lg px-3 py-2.5 transition-colors',
-                      symbol.symbol === activeSymbol?.symbol
-                        ? 'bg-primary/10'
-                        : 'hover:bg-muted/50'
-                    )}
-                  >
-                    <p className="text-sm font-medium text-foreground">{symbol.display_name}</p>
-                    <p className="text-xs text-muted-foreground">{symbol.symbol}</p>
-                  </button>
-                ))}
+            <PopoverContent align="center" className="w-80 p-3">
+              <div className="space-y-3">
+                {/* Category filter buttons */}
+                <div className="flex gap-2 p-2 bg-muted/30 rounded-lg">
+                  {['all', 'volatility', 'indices'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSymbolCategory(cat as 'all' | 'volatility' | 'indices')}
+                      className={cn(
+                        'px-3 py-1.5 rounded text-sm font-medium transition-all',
+                        symbolCategory === cat
+                          ? 'bg-primary text-white'
+                          : 'bg-muted text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filtered symbols list */}
+                <div className="space-y-1 max-h-96 overflow-y-auto">
+                  {symbols
+                    .filter((symbol) => {
+                      if (symbolCategory === 'all') return true;
+                      const displayName = symbol.display_name?.toLowerCase() || '';
+                      if (symbolCategory === 'volatility') {
+                        return displayName.includes('volatility') || displayName.includes('vol');
+                      }
+                      if (symbolCategory === 'indices') {
+                        return displayName.includes('indices') || displayName.includes('index') || 
+                               displayName.includes('wall') || displayName.includes('tech');
+                      }
+                      return true;
+                    })
+                    .map((symbol) => (
+                      <button
+                        key={symbol.symbol}
+                        onClick={() => {
+                          onSymbolChange(symbol.symbol);
+                          setSymbolDropdownOpen(false);
+                        }}
+                        className={cn(
+                          'w-full text-left rounded-lg px-3 py-2.5 transition-colors',
+                          symbol.symbol === activeSymbol?.symbol
+                            ? 'bg-primary/10'
+                            : 'hover:bg-muted/50'
+                        )}
+                      >
+                        <p className="text-sm font-medium text-foreground">{symbol.display_name}</p>
+                        <p className="text-xs text-muted-foreground">{symbol.symbol}</p>
+                      </button>
+                    ))}
+                </div>
               </div>
             </PopoverContent>
           </Popover>

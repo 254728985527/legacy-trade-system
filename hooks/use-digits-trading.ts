@@ -65,6 +65,7 @@ interface UseDigitsTradingReturn {
   candleData: OHLC[];
   incomingTicks: IncomingTick[];
   prices: number[];
+  lastTenDigits: { digit: number; direction: 'up' | 'down'; price: number }[];
 }
 
 export type UseDigitsTradingParams = Pick<UseBaseTradingParams, 'ws' | 'isConnected' | 'isExhausted' | 'isAuthenticated' | 'onAuthWSFailed'>;
@@ -101,6 +102,7 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
   const [turboMode, setTurboMode] = useState<boolean>(false);
   const [incomingTicks, setIncomingTicks] = useState<IncomingTick[]>([]);
   const [candleData, setCandleData] = useState<OHLC[]>([]);
+  const [lastTenDigits, setLastTenDigits] = useState<{ digit: number; direction: 'up' | 'down'; price: number }[]>([]);
 
   // Reset contract mode to the first option of the selected trade type
   const setTradeType = useCallback((type: TradeType) => {
@@ -189,6 +191,13 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
     };
 
     setIncomingTicks(prev => [...prev.slice(-2), newTick]); // Keep last 3 ticks
+    
+    // Track last 10 incoming digits with direction
+    const currentDigit = getLastDigit(currentTick.quote, pipSize);
+    setLastTenDigits(prev => [
+      ...prev.slice(-9),
+      { digit: currentDigit, direction, price: currentTick.quote }
+    ]);
 
     // Update candlestick data (aggregate every 5 ticks or 60 seconds)
     setCandleData(prev => {
@@ -290,5 +299,6 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
     candleData,
     incomingTicks,
     prices,
+    lastTenDigits,
   };
 }
