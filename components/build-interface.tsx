@@ -60,15 +60,25 @@ export function BuildInterface({
       setMatchFlash(false);
     }
 
-    // UNDER Signal conditions:
-    // 1. Highest digit is 7-9 AND lowest digit is 6-9
-    // 2. Highest digit is 0-4 AND last digit (A) equals lowest digit (C)
-    const isUnderTraditional = highestDigit >= 7 && highestDigit <= 9 && lowestDigit >= 6 && lowestDigit <= 9;
-    const isUnderSpecial = highestDigit >= 0 && highestDigit <= 4 && lastDigit === lowestDigit && lastDigit !== null;
-    const isUnder = isUnderTraditional || isUnderSpecial;
+    // Signal conditions when highest digit is 0-4:
+    const isHighest0to4 = highestDigit >= 0 && highestDigit <= 4;
+    
+    // Condition 1: Highest is 0-4 AND last digit (A) equals highest digit AND lowest is up to 4
+    // If A=C → OVER signal, else → UNDER signal
+    const condition1Met = isHighest0to4 && lastDigit === highestDigit && lowestDigit >= 0 && lowestDigit <= 4;
+    const condition1Over = condition1Met && lastDigit === lowestDigit;
+    const condition1Under = condition1Met && lastDigit !== lowestDigit;
 
-    // OVER Signal: highest digit is 5-9, lowest digit is 0-4
-    const isOver = highestDigit >= 5 && highestDigit <= 9 && lowestDigit >= 0 && lowestDigit <= 4;
+    // Condition 2: Highest is 0-4 AND last digit (A) equals lowest digit AND highest is up to 4
+    // Always → UNDER signal (regardless of A=C)
+    const condition2Under = isHighest0to4 && lastDigit === lowestDigit && highestDigit >= 0 && highestDigit <= 4 && lastDigit !== null;
+
+    // UNDER Signal: combines all UNDER conditions
+    const isUnder = condition1Under || condition2Under;
+
+    // OVER Signal: highest digit is 5-9, lowest digit is 0-4, OR condition1Over
+    const isOverTraditional = highestDigit >= 5 && highestDigit <= 9 && lowestDigit >= 0 && lowestDigit <= 4;
+    const isOver = condition1Over || isOverTraditional;
 
     if (isUnder) {
       setSignal('under');
