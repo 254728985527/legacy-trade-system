@@ -10,6 +10,7 @@ import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
+import { BuildInterface } from './build-interface';
 import type {
   AuthState,
   DerivAccount,
@@ -114,6 +115,12 @@ export function DigitsView({
   logoSrc,
   appName,
 }: DigitsViewProps) {
+  // Calculate confidence level based on highest digit percentage
+  const maxPct = Math.max(...digitStats.percentages);
+  const confidenceScore = Math.round(maxPct);
+  const confidenceLevel: 'low' | 'medium' | 'high' =
+    confidenceScore >= 15 ? 'high' : confidenceScore >= 10 ? 'medium' : 'low';
+
   if (error) {
     return (
       <main className="flex flex-col bg-background items-center justify-center px-4 min-h-dvh">
@@ -231,6 +238,16 @@ export function DigitsView({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Build Interface Panel */}
+            <div className="shrink-0 mb-12">
+              <BuildInterface
+                lastDigit={lastDigit}
+                digitStats={digitStats}
+                confidence={confidenceScore}
+                confidenceLevel={confidenceLevel}
+              />
+            </div>
           </>
         )}
       </div>
