@@ -246,6 +246,7 @@ export function DigitsView({
                 digitStats={digitStats}
                 confidence={confidenceScore}
                 confidenceLevel={confidenceLevel}
+                selectedDigit={selectedDigit}
               />
             </div>
           </>

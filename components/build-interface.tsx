@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { DigitStats } from '../lib/types';
 
@@ -8,14 +9,23 @@ interface BuildInterfaceProps {
   digitStats: DigitStats;
   confidence: number;
   confidenceLevel: 'low' | 'medium' | 'high';
+  selectedDigit?: number;
 }
+
+type SignalType = 'under' | 'over' | null;
 
 export function BuildInterface({
   lastDigit,
   digitStats,
   confidence,
   confidenceLevel,
+  selectedDigit = 0,
 }: BuildInterfaceProps) {
+  const [signal, setSignal] = useState<SignalType>(null);
+  const [matchFlash, setMatchFlash] = useState(false);
+  const [displayConfidence, setDisplayConfidence] = useState(confidence);
+  const [displayConfidenceLevel, setDisplayConfidenceLevel] = useState<'low' | 'medium' | 'high'>(confidenceLevel);
+
   const maxPct = Math.max(...digitStats.percentages);
   const minPct = Math.min(...digitStats.percentages);
 
@@ -25,17 +35,64 @@ export function BuildInterface({
   const highestPct = digitStats.percentages[highestDigit];
   const lowestPct = digitStats.percentages[lowestDigit];
 
+  // Signal detection logic
+  useEffect(() => {
+    // Check if A=C (last digit matches selected digit)
+    const isMatch = lastDigit === selectedDigit && lastDigit !== null;
+
+    if (isMatch) {
+      // Boost confidence to 98% on match
+      setDisplayConfidence(98);
+      setDisplayConfidenceLevel('high');
+      setMatchFlash(true);
+
+      // Flash green for 1 second then reset
+      const flashTimer = setTimeout(() => {
+        setMatchFlash(false);
+        // Let normal signal detection resume
+      }, 1000);
+
+      return () => clearTimeout(flashTimer);
+    } else {
+      // Not a match, so clear match flash if it was active
+      setMatchFlash(false);
+    }
+
+    // UNDER Signal: highest digit is 0-4, lowest digit is 5-9
+    const isUnder = highestDigit >= 0 && highestDigit <= 4 && lowestDigit >= 5 && lowestDigit <= 9;
+
+    // OVER Signal: highest digit is 5-9, lowest digit is 0-4
+    const isOver = highestDigit >= 5 && highestDigit <= 9 && lowestDigit >= 0 && lowestDigit <= 4;
+
+    if (isUnder) {
+      setSignal('under');
+    } else if (isOver) {
+      setSignal('over');
+    } else {
+      setSignal(null);
+    }
+
+    // Update confidence level based on current score
+    setDisplayConfidence(confidence);
+    const newLevel: 'low' | 'medium' | 'high' = confidence >= 15 ? 'high' : confidence >= 10 ? 'medium' : 'low';
+    setDisplayConfidenceLevel(newLevel);
+  }, [lastDigit, selectedDigit, highestDigit, lowestDigit, confidence]);
+
   const confidenceColor = {
     low: 'text-red-400',
     medium: 'text-yellow-400',
     high: 'text-green-400',
-  }[confidenceLevel];
+  }[displayConfidenceLevel];
 
   const confidenceLabel = {
     low: 'Low confidence',
     medium: 'Medium confidence',
     high: 'High confidence',
-  }[confidenceLevel];
+  }[displayConfidenceLevel];
+
+  // Signal styling
+  const signalColor = signal === 'under' ? 'text-blue-400' : signal === 'over' ? 'text-orange-400' : '';
+  const signalLabel = signal === 'under' ? 'UNDER' : signal === 'over' ? 'OVER' : '';
 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 space-y-4">
@@ -98,7 +155,12 @@ export function BuildInterface({
       {/* Bottom row: Circular progress + Confidence */}
       <div className="grid grid-cols-2 gap-4">
         {/* Circular progress */}
-        <div className="border border-slate-700/60 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center bg-slate-800/30 backdrop-blur-md hover:border-slate-600 transition-colors">
+        <div
+          className={cn(
+            'border border-slate-700/60 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center bg-slate-800/30 backdrop-blur-md hover:border-slate-600 transition-all',
+            matchFlash && 'bg-green-500/20 border-green-400/60'
+          )}
+        >
           <div className="relative w-32 h-32 flex items-center justify-center">
             {/* Background circle */}
             <svg
@@ -122,26 +184,74 @@ export function BuildInterface({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="8"
-                strokeDasharray={`${(confidence / 100) * 2 * Math.PI * 54} ${2 * Math.PI * 54}`}
+                strokeDasharray={`${(displayConfidence / 100) * 2 * Math.PI * 54} ${2 * Math.PI * 54}`}
                 strokeLinecap="round"
-                className="text-red-400 transition-all duration-500"
+                className={cn(
+                  'transition-all duration-500',
+                  matchFlash ? 'text-green-400' : 'text-red-400'
+                )}
               />
             </svg>
             {/* Center text */}
             <div className="absolute text-center">
-              <span className="text-white text-4xl sm:text-5xl font-bold">{confidence}%</span>
+              <span
+                className={cn(
+                  'text-4xl sm:text-5xl font-bold transition-colors duration-300',
+                  matchFlash ? 'text-green-400' : 'text-white'
+                )}
+              >
+                {displayConfidence}%
+              </span>
             </div>
           </div>
         </div>
 
         {/* Confidence section */}
-        <div className="border border-slate-700/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-center bg-slate-800/30 backdrop-blur-md hover:border-slate-600 transition-colors">
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Confidence
-          </p>
-          <p className={cn('text-base sm:text-lg font-semibold', confidenceColor)}>
-            {confidenceLabel}
-          </p>
+        <div
+          className={cn(
+            'border border-slate-700/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-center bg-slate-800/30 backdrop-blur-md hover:border-slate-600 transition-all',
+            matchFlash && 'bg-green-500/20 border-green-400/60'
+          )}
+        >
+          {/* Signal display with blinking animation */}
+          {signal && !matchFlash && (
+            <style>{`
+              @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.3; }
+              }
+              .signal-blink {
+                animation: blink 0.6s infinite;
+              }
+            `}</style>
+          )}
+
+          {matchFlash ? (
+            <div className="flex flex-col items-center justify-center">
+              <p className="text-green-400 text-xs font-semibold uppercase tracking-widest mb-2">
+                Match
+              </p>
+              <p className="text-green-400 text-2xl sm:text-3xl font-bold">✓</p>
+            </div>
+          ) : signal ? (
+            <div className="flex flex-col items-center justify-center signal-blink">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">
+                Signal
+              </p>
+              <p className={cn('text-2xl sm:text-3xl font-bold', signalColor)}>
+                {signalLabel}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                Confidence
+              </p>
+              <p className={cn('text-base sm:text-lg font-semibold', confidenceColor)}>
+                {confidenceLabel}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
