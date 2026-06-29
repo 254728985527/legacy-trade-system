@@ -37,8 +37,10 @@ export function BuildInterface({
 
   // Signal detection logic
   useEffect(() => {
-    // Check if A=C (last digit matches selected digit)
-    const isMatch = lastDigit === selectedDigit && lastDigit !== null;
+    // Check if A=C (last digit matches selected digit) OR if incoming tick matches lowest digit
+    const isSelectedMatch = lastDigit === selectedDigit && lastDigit !== null;
+    const isLowestMatch = lastDigit === lowestDigit && lastDigit !== null;
+    const isMatch = isSelectedMatch || isLowestMatch;
 
     if (isMatch) {
       // Boost confidence to 98% on match
