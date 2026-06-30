@@ -64,42 +64,19 @@ export function BuildInterface({
       setMatchFlash(false);
     }
 
-    // Determine signal based on bar comparison and digit ranges
+    // Determine signal only when incoming tick (lastDigit) matches C (lowestDigit)
     let newSignal: SignalType = null;
 
-    // Check which ranges the highest and lowest digits belong to
-    const highestInTopRange = highestDigit >= 0 && highestDigit <= 4;
-    const highestInBelowRange = highestDigit >= 5 && highestDigit <= 9;
-    const lowestInTopRange = lowestDigit >= 0 && lowestDigit <= 4;
-    const lowestInBelowRange = lowestDigit >= 5 && lowestDigit <= 9;
-
-    // Cross-range comparisons:
-    // UNDER: Top range has GREEN (highest) AND Below range has RED (lowest)
-    if (highestInTopRange && lowestInBelowRange) {
-      newSignal = 'under';
-    }
-    // OVER: Top range has RED (lowest) AND Below range has GREEN (highest)
-    else if (lowestInTopRange && highestInBelowRange) {
-      newSignal = 'over';
-    }
-    // Single range comparison when lastDigit is available
-    else if (lastDigit !== null) {
-      // Top digits (0-4): Compare green vs red bars
+    // Signal triggers only when A=C (lastDigit equals lowestDigit)
+    if (lastDigit !== null && lastDigit === lowestDigit) {
+      // Determine OVER or UNDER based on which range the digit is in
+      // Top digits (0-4): UNDER
       if (lastDigit >= 0 && lastDigit <= 4) {
-        if (greenBar > redBar) {
-          newSignal = 'over';
-        } else if (redBar > greenBar) {
-          newSignal = 'under';
-        }
+        newSignal = 'under';
       }
-      
-      // Below digits (5-9): Compare green vs red bars
-      if (lastDigit >= 5 && lastDigit <= 9) {
-        if (greenBar > redBar) {
-          newSignal = 'over';
-        } else if (redBar > greenBar) {
-          newSignal = 'under';
-        }
+      // Below digits (5-9): OVER
+      else if (lastDigit >= 5 && lastDigit <= 9) {
+        newSignal = 'over';
       }
     }
 
