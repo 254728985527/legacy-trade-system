@@ -35,6 +35,10 @@ export function BuildInterface({
   const highestPct = digitStats.percentages[highestDigit];
   const lowestPct = digitStats.percentages[lowestDigit];
 
+  // Green bar = highest percentage, Red bar = lowest percentage
+  const greenBar = highestPct;
+  const redBar = lowestPct;
+
   // Signal detection logic
   useEffect(() => {
     // Check if A=C (last digit matches selected digit) OR if incoming tick matches lowest digit
@@ -60,39 +64,34 @@ export function BuildInterface({
       setMatchFlash(false);
     }
 
-    // Signal conditions when highest digit is 0-4:
-    const isHighest0to4 = highestDigit >= 0 && highestDigit <= 4;
-    
-    // Condition 1: Highest is 0-4 AND last digit (A) equals highest digit AND lowest is up to 4
-    // If A=C → OVER signal, else → UNDER signal
-    const condition1Met = isHighest0to4 && lastDigit === highestDigit && lowestDigit >= 0 && lowestDigit <= 4;
-    const condition1Over = condition1Met && lastDigit === lowestDigit;
-    const condition1Under = condition1Met && lastDigit !== lowestDigit;
+    // Determine signal based on bar comparison and digit ranges
+    let newSignal: SignalType = null;
 
-    // Condition 2: Highest is 0-4 AND last digit (A) equals lowest digit AND highest is up to 4
-    // Always → UNDER signal (regardless of A=C)
-    const condition2Under = isHighest0to4 && lastDigit === lowestDigit && highestDigit >= 0 && highestDigit <= 4 && lastDigit !== null;
-
-    // UNDER Signal: combines all UNDER conditions
-    const isUnder = condition1Under || condition2Under;
-
-    // OVER Signal: highest digit is 5-9, lowest digit is 0-4, OR condition1Over
-    const isOverTraditional = highestDigit >= 5 && highestDigit <= 9 && lowestDigit >= 0 && lowestDigit <= 4;
-    const isOver = condition1Over || isOverTraditional;
-
-    if (isUnder) {
-      setSignal('under');
-    } else if (isOver) {
-      setSignal('over');
-    } else {
-      setSignal(null);
+    // Top digits (0-4): Compare green vs red bars
+    if (lastDigit !== null && lastDigit >= 0 && lastDigit <= 4) {
+      if (greenBar > redBar) {
+        newSignal = 'over';
+      } else if (redBar > greenBar) {
+        newSignal = 'under';
+      }
     }
+    
+    // Below digits (5-9): Compare green vs red bars
+    if (lastDigit !== null && lastDigit >= 5 && lastDigit <= 9) {
+      if (greenBar > redBar) {
+        newSignal = 'over';
+      } else if (redBar > greenBar) {
+        newSignal = 'under';
+      }
+    }
+
+    setSignal(newSignal);
 
     // Update confidence level based on current score
     setDisplayConfidence(confidence);
     const newLevel: 'low' | 'medium' | 'high' = confidence >= 15 ? 'high' : confidence >= 10 ? 'medium' : 'low';
     setDisplayConfidenceLevel(newLevel);
-  }, [lastDigit, selectedDigit, highestDigit, lowestDigit, confidence]);
+  }, [lastDigit, highestDigit, lowestDigit, greenBar, redBar, confidence]);
 
   const confidenceColor = {
     low: 'text-red-400',
