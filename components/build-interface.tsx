@@ -67,21 +67,39 @@ export function BuildInterface({
     // Determine signal based on bar comparison and digit ranges
     let newSignal: SignalType = null;
 
-    // Top digits (0-4): Compare green vs red bars
-    if (lastDigit !== null && lastDigit >= 0 && lastDigit <= 4) {
-      if (greenBar > redBar) {
-        newSignal = 'over';
-      } else if (redBar > greenBar) {
-        newSignal = 'under';
-      }
+    // Check which ranges the highest and lowest digits belong to
+    const highestInTopRange = highestDigit >= 0 && highestDigit <= 4;
+    const highestInBelowRange = highestDigit >= 5 && highestDigit <= 9;
+    const lowestInTopRange = lowestDigit >= 0 && lowestDigit <= 4;
+    const lowestInBelowRange = lowestDigit >= 5 && lowestDigit <= 9;
+
+    // Cross-range comparisons:
+    // UNDER: Top range has GREEN (highest) AND Below range has RED (lowest)
+    if (highestInTopRange && lowestInBelowRange) {
+      newSignal = 'under';
     }
-    
-    // Below digits (5-9): Compare green vs red bars
-    if (lastDigit !== null && lastDigit >= 5 && lastDigit <= 9) {
-      if (greenBar > redBar) {
-        newSignal = 'over';
-      } else if (redBar > greenBar) {
-        newSignal = 'under';
+    // OVER: Top range has RED (lowest) AND Below range has GREEN (highest)
+    else if (lowestInTopRange && highestInBelowRange) {
+      newSignal = 'over';
+    }
+    // Single range comparison when lastDigit is available
+    else if (lastDigit !== null) {
+      // Top digits (0-4): Compare green vs red bars
+      if (lastDigit >= 0 && lastDigit <= 4) {
+        if (greenBar > redBar) {
+          newSignal = 'over';
+        } else if (redBar > greenBar) {
+          newSignal = 'under';
+        }
+      }
+      
+      // Below digits (5-9): Compare green vs red bars
+      if (lastDigit >= 5 && lastDigit <= 9) {
+        if (greenBar > redBar) {
+          newSignal = 'over';
+        } else if (redBar > greenBar) {
+          newSignal = 'under';
+        }
       }
     }
 
@@ -91,7 +109,7 @@ export function BuildInterface({
     setDisplayConfidence(confidence);
     const newLevel: 'low' | 'medium' | 'high' = confidence >= 15 ? 'high' : confidence >= 10 ? 'medium' : 'low';
     setDisplayConfidenceLevel(newLevel);
-  }, [lastDigit, highestDigit, lowestDigit, greenBar, redBar, confidence]);
+  }, [lastDigit, highestDigit, lowestDigit, highestPct, lowestPct, confidence]);
 
   const confidenceColor = {
     low: 'text-red-400',
