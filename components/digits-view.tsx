@@ -6,7 +6,6 @@ import { Header } from '@/components/custom/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CurrentTickDisplay } from './current-tick-display';
 import { LastDigitPrediction } from './last-digit-prediction';
-import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
@@ -208,29 +207,6 @@ export function DigitsView({
                       </div>
                     )}
 
-                    {/* Column 3: Trade controls */}
-                    <div className="pt-4 sm:pt-6 lg:pt-0 lg:pl-6 lg:border-l lg:border-border">
-                      <TradeControls
-                        tradeType={tradeType}
-                        contractMode={contractMode}
-                        onContractModeChange={setContractMode}
-                        selectedDigit={selectedDigit}
-                        isConnected={isConnected}
-                        stake={stake}
-                        onStakeChange={setStake}
-                        duration={duration}
-                        onDurationChange={setDuration}
-                        durationLimits={durationLimits}
-                        proposal={proposal}
-                        isProposalLoading={isProposalLoading}
-                        onBuy={buyContract}
-                        isBuying={isBuying}
-                        buyResult={buyResult}
-                        buyError={buyError}
-                        onClearBuyResult={clearBuyResult}
-                        isAuthenticated={authState === 'authenticated'}
-                      />
-                    </div>
                   </div>
                 </div>
               </CardContent>
