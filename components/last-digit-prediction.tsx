@@ -1,13 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  computePredictionSignals,
-  getDigitHighlights,
-} from '../lib/digit-stats';
-import type { DigitStats } from '../lib/types';
-import type { ActiveSymbol, Tick } from '../lib/types';
-import { Check, TrendingUp } from 'lucide-react';
+import { getDigitHighlights } from '../lib/digit-stats';
+import type { ActiveSymbol, DigitStats, Tick } from '../lib/types';
 
 interface LastDigitPredictionProps {
   digitStats: DigitStats;
@@ -19,18 +14,40 @@ interface LastDigitPredictionProps {
   pipSize: number;
 }
 
+/**
+ * Medallion center positions measured against the 1402x1122 artwork,
+ * expressed as percentages of the container so overlays stay aligned
+ * regardless of rendered size.
+ */
+const DIGIT_X: Record<number, number> = {
+  0: 33.17,
+  1: 41.94,
+  2: 50.78,
+  3: 59.56,
+  4: 68.33,
+  5: 33.17,
+  6: 41.94,
+  7: 50.78,
+  8: 59.56,
+  9: 68.33,
+};
+const ROW_TOP_Y = 19.0; // digits 0-4
+const ROW_BOTTOM_Y = 29.0; // digits 5-9
+
 type DigitCategory = 'highest' | 'second' | 'lowest' | 'neutral';
 
-function digitFillClasses(category: DigitCategory): string {
+/** Ring color used to mark a digit's live statistical category. */
+function ringColor(category: DigitCategory, isLive: boolean): string | null {
+  if (isLive) return '#1d6fe0'; // blue live cursor takes priority
   switch (category) {
     case 'highest':
-      return 'bg-[#1f7a34] text-[#f5edd8] border-[#0c3a18]';
+      return '#1f7a34';
     case 'second':
-      return 'bg-[#e0a419] text-[#3a2704] border-[#8a6104]';
+      return '#e0a419';
     case 'lowest':
-      return 'bg-[#a51f1f] text-[#f5edd8] border-[#5c0c0c]';
+      return '#a51f1f';
     default:
-      return 'bg-[#faf5e4] text-[#1a2a4f] border-[#c8a84e]';
+      return null;
   }
 }
 
@@ -44,7 +61,6 @@ export function LastDigitPrediction({
   pipSize,
 }: LastDigitPredictionProps) {
   const { highest, secondHighest, lowest } = getDigitHighlights(digitStats);
-  const signals = computePredictionSignals(digitStats, lastDigit, 6);
 
   const categoryFor = (digit: number): DigitCategory => {
     if (digit === highest) return 'highest';
@@ -55,208 +71,116 @@ export function LastDigitPrediction({
 
   const priceStr =
     currentTick != null ? currentTick.quote.toFixed(pipSize) : '----';
+  const symbolName = activeSymbol?.underlying_symbol_name ?? 'Volatility';
 
   const renderDigit = (digit: number) => {
+    const x = DIGIT_X[digit];
+    const y = digit <= 4 ? ROW_TOP_Y : ROW_BOTTOM_Y;
     const pct = digitStats.percentages[digit] ?? 0;
     const category = categoryFor(digit);
     const isLive = digit === lastDigit;
     const isSelected = digit === selectedDigit;
+    const ring = ringColor(category, isLive);
 
     return (
-      <button
-        key={digit}
-        type="button"
-        onClick={() => onDigitSelect(digit)}
-        aria-pressed={isSelected}
-        aria-label={`Digit ${digit}, ${pct.toFixed(1)} percent`}
-        className="flex flex-col items-center gap-1 focus:outline-none group"
-      >
-        <span
+      <div key={digit}>
+        {/* Live category / cursor ring overlaid on the artwork medallion */}
+        {ring && digitStats.totalTicks > 0 && (
+          <span
+            aria-hidden="true"
+            className={cn('absolute rounded-full', isLive && 'animate-pulse')}
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              width: '6.9%',
+              aspectRatio: '1 / 1',
+              transform: 'translate(-50%, -50%)',
+              border: '0.55vw solid ' + ring,
+              boxShadow: `0 0 0 0.12vw rgba(0,0,0,0.35), 0 0 1.2vw ${ring}`,
+            }}
+          />
+        )}
+
+        {/* Live percentage badge */}
+        {digitStats.totalTicks > 0 && (
+          <span
+            className="absolute z-10 rounded-full border border-black/30 bg-[#0a1a3f] px-1.5 py-0.5 text-[0.55vw] font-bold leading-none text-[#e9c968] shadow"
+            style={{
+              left: `${x + 2.6}%`,
+              top: `${y - 3.4}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            {pct.toFixed(1)}%
+          </span>
+        )}
+
+        {/* Transparent hotspot to keep digit selection working */}
+        <button
+          type="button"
+          onClick={() => onDigitSelect(digit)}
+          aria-pressed={isSelected}
+          aria-label={`Digit ${digit}, ${pct.toFixed(1)} percent`}
           className={cn(
-            'relative flex items-center justify-center rounded-full border-2 font-bold shadow-md transition-transform group-hover:scale-105',
-            'w-11 h-11 sm:w-12 sm:h-12 text-lg sm:text-xl',
-            digitFillClasses(category),
-            isLive && 'ring-2 ring-[#1d6fe0] ring-offset-2 ring-offset-[#faf5e4]',
-            isSelected && 'outline outline-2 outline-[#1a2a4f]'
+            'absolute rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a2a4f]',
+            isSelected && 'ring-2 ring-[#1a2a4f]'
           )}
-        >
-          {digit}
-        </span>
-        <span className="text-[10px] sm:text-xs font-mono font-semibold text-[#1a2a4f]/80">
-          {pct.toFixed(1)}%
-        </span>
-      </button>
+          style={{
+            left: `${x}%`,
+            top: `${y}%`,
+            width: '6.9%',
+            aspectRatio: '1 / 1',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+      </div>
     );
   };
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      {/* Ornate framed panel */}
-      <div className="rounded-xl border-2 border-[#c8a84e] bg-[#faf5e4] shadow-lg overflow-hidden">
-        {/* Title bar */}
-        <div className="bg-gradient-to-b from-[#132a5c] to-[#0a1a3f] border-b-2 border-[#c8a84e] px-3 py-2 sm:py-3 text-center">
-          <h2 className="font-serif tracking-wider text-[#e9c968] text-lg sm:text-2xl font-bold text-balance">
-            LAST DIGIT PREDICTION
-          </h2>
+    <div className="h-full w-full flex items-start justify-center">
+      <div className="relative w-full max-w-[820px]" style={{ aspectRatio: '1402 / 1122' }}>
+        {/* Exact reference artwork — layout preserved */}
+        <img
+          src="/images/last-digit-prediction.png"
+          alt="Last Digit Prediction board"
+          className="absolute inset-0 h-full w-full select-none"
+          draggable={false}
+        />
+
+        {/* Live symbol name over the dropdown */}
+        <div
+          className="absolute flex items-center bg-[#f4edd7] px-1"
+          style={{
+            left: '4.9%',
+            top: '15.9%',
+            width: '15%',
+            height: '6.4%',
+          }}
+        >
+          <span className="truncate text-[0.95vw] font-bold text-[#1a2a4f]">
+            {symbolName}
+          </span>
         </div>
 
-        {/* Symbol + price row */}
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[#c8a84e]/60">
-          <span className="rounded-md border border-[#c8a84e] bg-[#fffbf0] px-2 py-1 text-xs sm:text-sm font-semibold text-[#1a2a4f] truncate">
-            {activeSymbol?.underlying_symbol_name ?? 'Volatility'}
-          </span>
-          <span className="rounded-md border border-[#c8a84e] bg-[#fffbf0] px-2 py-1 text-xs sm:text-sm font-semibold text-[#1a2a4f] whitespace-nowrap">
+        {/* Live price over the price box */}
+        <div
+          className="absolute flex items-center justify-center bg-[#f4edd7]"
+          style={{
+            left: '77.3%',
+            top: '16.1%',
+            width: '18%',
+            height: '6.2%',
+          }}
+        >
+          <span className="whitespace-nowrap text-[1vw] font-bold text-[#1a2a4f]">
             Price - {priceStr}
           </span>
         </div>
 
-        {/* Digit medallions */}
-        <div className="px-3 py-3 space-y-3">
-          <div>
-            <p className="text-center text-[11px] sm:text-xs font-bold tracking-widest text-[#1a2a4f] mb-1.5">
-              DIGIT 0 TO 4
-            </p>
-            <div className="grid grid-cols-5 place-items-center gap-1">
-              {[0, 1, 2, 3, 4].map(renderDigit)}
-            </div>
-          </div>
-          <div>
-            <p className="text-center text-[11px] sm:text-xs font-bold tracking-widest text-[#1a2a4f] mb-1.5">
-              DIGIT 5 TO 9
-            </p>
-            <div className="grid grid-cols-5 place-items-center gap-1">
-              {[5, 6, 7, 8, 9].map(renderDigit)}
-            </div>
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2 border-y border-[#c8a84e]/60 bg-[#fffbf0]">
-          <LegendItem color="#1d6fe0" label="Live Cursor" sub="Current Digit" />
-          <LegendItem color="#1f7a34" label="Highest %" sub="Highest" />
-          <LegendItem color="#e0a419" label="Second %" sub="2nd Highest" />
-          <LegendItem color="#a51f1f" label="Lowest %" sub="Lowest" />
-        </div>
-
-        {/* Dynamic signal rows */}
-        <div className="divide-y divide-[#c8a84e]/40">
-          {signals.map((s) => (
-            <div
-              key={s.rank}
-              className="flex items-center gap-2 px-3 py-2 text-[#1a2a4f]"
-            >
-              {/* Rank badge */}
-              <span className="flex-none w-8 h-8 rounded-md bg-gradient-to-b from-[#132a5c] to-[#0a1a3f] border border-[#c8a84e] text-[#e9c968] flex items-center justify-center text-xs font-bold">
-                {String(s.rank).padStart(2, '0')}
-              </span>
-
-              {/* Hot / cold digits */}
-              <div className="flex items-center gap-1 flex-none">
-                <span
-                  className={cn(
-                    'w-6 h-6 rounded flex items-center justify-center text-xs font-bold border',
-                    digitFillClasses('highest')
-                  )}
-                >
-                  {s.hotDigit}
-                </span>
-                <span
-                  className={cn(
-                    'w-6 h-6 rounded flex items-center justify-center text-xs font-bold border',
-                    digitFillClasses('lowest')
-                  )}
-                >
-                  {s.coldDigit}
-                </span>
-              </div>
-
-              {/* Direction */}
-              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <TrendingUp
-                  className={cn(
-                    'w-4 h-4 flex-none',
-                    s.direction === 'UNDER'
-                      ? 'text-[#1f7a34]'
-                      : 'text-[#a51f1f]'
-                  )}
-                  aria-hidden="true"
-                />
-                <div className="min-w-0">
-                  <p
-                    className={cn(
-                      'text-xs sm:text-sm font-bold leading-tight',
-                      s.direction === 'UNDER'
-                        ? 'text-[#1f7a34]'
-                        : 'text-[#a51f1f]'
-                    )}
-                  >
-                    {s.direction}
-                  </p>
-                  <p className="text-[10px] leading-tight text-[#1a2a4f]/70 truncate">
-                    ENTRY {s.entryDigits.join(',')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Zone */}
-              <span
-                className={cn(
-                  'flex-none w-11 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold',
-                  s.zone === '0-4'
-                    ? 'bg-[#1f7a34] text-[#f5edd8] border-[#0c3a18]'
-                    : 'bg-[#a51f1f] text-[#f5edd8] border-[#5c0c0c]'
-                )}
-              >
-                {s.zone}
-              </span>
-
-              {/* Active check */}
-              <span
-                className={cn(
-                  'flex-none w-6 h-6 rounded-full flex items-center justify-center border',
-                  s.active
-                    ? 'bg-[#1f7a34] border-[#0c3a18] text-[#f5edd8]'
-                    : 'bg-[#e6ddc4] border-[#c8a84e]/50 text-transparent'
-                )}
-                aria-label={s.active ? 'Entry signal active' : 'No signal'}
-              >
-                <Check className="w-4 h-4" aria-hidden="true" />
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer motto */}
-        <div className="bg-gradient-to-b from-[#132a5c] to-[#0a1a3f] border-t-2 border-[#c8a84e] px-3 py-2 text-center">
-          <p className="text-[10px] sm:text-xs font-semibold tracking-wide text-[#e9c968]">
-            FOCUS | PLAN | EXECUTE &middot; PREDICT | TRADE | PROFIT
-          </p>
-        </div>
+        {/* Live digit overlays */}
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(renderDigit)}
       </div>
-    </div>
-  );
-}
-
-function LegendItem({
-  color,
-  label,
-  sub,
-}: {
-  color: string;
-  label: string;
-  sub: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className="w-3 h-3 rounded-full border border-black/20 flex-none"
-        style={{ backgroundColor: color }}
-        aria-hidden="true"
-      />
-      <span className="text-[11px] leading-tight">
-        <span className="font-bold text-[#1a2a4f]">{label}</span>
-        <span className="block text-[#1a2a4f]/60">{sub}</span>
-      </span>
     </div>
   );
 }
