@@ -1,6 +1,17 @@
 'use client';
 
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { getSubmarketDisplayName } from '@/lib/active-symbols-display-names';
 import { getDigitHighlights } from '../lib/digit-stats';
 import type { ActiveSymbol, DigitStats, Tick } from '../lib/types';
 
@@ -12,6 +23,8 @@ interface LastDigitPredictionProps {
   currentTick: Tick | null;
   activeSymbol: ActiveSymbol | null;
   pipSize: number;
+  symbols: ActiveSymbol[];
+  onSymbolChange: (symbol: string) => void;
 }
 
 /**
@@ -35,6 +48,23 @@ const ROW_TOP_Y = 19.0; // digits 0-4
 const ROW_BOTTOM_Y = 29.0; // digits 5-9
 
 type DigitCategory = 'highest' | 'second' | 'lowest' | 'neutral';
+type SubmarketGroup = { displayName: string; symbols: ActiveSymbol[] };
+
+function groupBySubmarket(symbols: ActiveSymbol[]): Map<string, SubmarketGroup> {
+  const groups = new Map<string, SubmarketGroup>();
+  for (const symbol of symbols) {
+    const key = symbol.submarket;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.symbols.push(symbol);
+    } else {
+      const displayName =
+        symbol.submarket_display_name ?? getSubmarketDisplayName(symbol.submarket);
+      groups.set(key, { displayName, symbols: [symbol] });
+    }
+  }
+  return groups;
+}
 
 /** Ring color used to mark a digit's live statistical category. */
 function ringColor(category: DigitCategory, isLive: boolean): string | null {
@@ -59,8 +89,11 @@ export function LastDigitPrediction({
   currentTick,
   activeSymbol,
   pipSize,
+  symbols,
+  onSymbolChange,
 }: LastDigitPredictionProps) {
   const { highest, secondHighest, lowest } = getDigitHighlights(digitStats);
+  const grouped = useMemo(() => groupBySubmarket(symbols), [symbols]);
 
   const categoryFor = (digit: number): DigitCategory => {
     if (digit === highest) return 'highest';
@@ -71,7 +104,7 @@ export function LastDigitPrediction({
 
   const priceStr =
     currentTick != null ? currentTick.quote.toFixed(pipSize) : '----';
-  const symbolName = activeSymbol?.underlying_symbol_name ?? 'Volatility';
+  const symbolName = activeSymbol?.underlying_symbol_name ?? 'Select volatility';
 
   const renderDigit = (digit: number) => {
     const x = DIGIT_X[digit];
@@ -148,32 +181,64 @@ export function LastDigitPrediction({
           draggable={false}
         />
 
-        {/* Live symbol name over the dropdown */}
+        {/* Functional volatility selector over the artwork dropdown box.
+            An opaque cream panel masks the baked-in artwork label. */}
         <div
-          className="absolute flex items-center bg-[#f4edd7] px-1"
+          className="absolute overflow-hidden rounded-md bg-[#f4edd7]"
           style={{
-            left: '4.9%',
-            top: '15.9%',
-            width: '15%',
-            height: '6.4%',
+            left: '5.4%',
+            top: '16.2%',
+            width: '18.4%',
+            height: '5.8%',
           }}
         >
-          <span className="truncate text-[0.95vw] font-bold text-[#1a2a4f]">
-            {symbolName}
-          </span>
+          <Select
+            value={activeSymbol?.underlying_symbol ?? ''}
+            onValueChange={onSymbolChange}
+          >
+            <SelectTrigger
+              aria-label="Select volatility"
+              className="h-full w-full rounded-md border-0 bg-transparent px-2 text-left font-bold text-[#1a2a4f] shadow-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#1a2a4f] [&>span]:truncate [&_svg]:text-[#1a2a4f]"
+              style={{ fontSize: 'clamp(9px, 0.95vw, 15px)' }}
+            >
+              <SelectValue placeholder="Select volatility">
+                {symbolName}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {Array.from(grouped.entries()).map(
+                ([submarket, { displayName, symbols: group }]) => (
+                  <SelectGroup key={submarket}>
+                    <SelectLabel>{displayName}</SelectLabel>
+                    {group.map((symbol) => (
+                      <SelectItem
+                        key={symbol.underlying_symbol}
+                        value={symbol.underlying_symbol}
+                      >
+                        {symbol.underlying_symbol_name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Live price over the price box */}
+        {/* Live price over the price box — cream mask hides baked-in price */}
         <div
-          className="absolute flex items-center justify-center bg-[#f4edd7]"
+          className="absolute flex items-center justify-center overflow-hidden rounded-md bg-[#f4edd7]"
           style={{
-            left: '77.3%',
-            top: '16.1%',
-            width: '18%',
-            height: '6.2%',
+            left: '76.6%',
+            top: '16.2%',
+            width: '18.4%',
+            height: '5.8%',
           }}
         >
-          <span className="whitespace-nowrap text-[1vw] font-bold text-[#1a2a4f]">
+          <span
+            className="whitespace-nowrap font-bold text-[#1a2a4f]"
+            style={{ fontSize: 'clamp(10px, 1vw, 16px)' }}
+          >
             Price - {priceStr}
           </span>
         </div>

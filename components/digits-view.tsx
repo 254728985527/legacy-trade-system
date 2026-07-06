@@ -203,6 +203,8 @@ export function DigitsView({
                           currentTick={currentTick}
                           activeSymbol={activeSymbol}
                           pipSize={pipSize}
+                          symbols={symbols}
+                          onSymbolChange={selectSymbol}
                         />
                       </div>
                     )}
