@@ -5,7 +5,7 @@ import { Footer } from '@/components/custom/footer';
 import { Header } from '@/components/custom/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CurrentTickDisplay } from './current-tick-display';
-import { DigitStatsBar } from './digit-stats-bar';
+import { LastDigitPrediction } from './last-digit-prediction';
 import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
@@ -196,10 +196,14 @@ export function DigitsView({
                     {/* Column 2: Digit stats — hidden for Even/Odd */}
                     {tradeType !== 'even-odd' && (
                       <div className="py-4 sm:py-6 lg:py-0 lg:px-6 lg:border-l lg:border-border">
-                        <DigitStatsBar
+                        <LastDigitPrediction
                           digitStats={digitStats}
                           selectedDigit={selectedDigit}
                           onDigitSelect={setSelectedDigit}
+                          lastDigit={lastDigit}
+                          currentTick={currentTick}
+                          activeSymbol={activeSymbol}
+                          pipSize={pipSize}
                         />
                       </div>
                     )}
