@@ -217,9 +217,9 @@ export function DigitsView({
                     </div>
                     <div style={{ fontSize: '14px', letterSpacing: '2px', color: 'rgb(255, 215, 0)', marginBottom: '8px' }}>⭐ ⭐ ⭐ ⭐ ⭐</div>
                     <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid rgb(255, 215, 0)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)' }}>
-                      <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'rgb(255, 215, 0)' }}>32</div>
+                      <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'rgb(255, 215, 0)' }}>{Math.floor(livePrice) % 10}</div>
                     </div>
-                    <div style={{ fontSize: '9px', color: 'rgb(180, 180, 180)', marginTop: '6px' }}>TICKS: 32/1000</div>
+                    <div style={{ fontSize: '9px', color: 'rgb(180, 180, 180)', marginTop: '6px' }}>TICKS: {Math.floor(livePrice) % 10}/1000</div>
                   </div>
 
                   {/* Live Cursor Tracker */}
