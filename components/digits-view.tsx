@@ -172,8 +172,8 @@ export function DigitsView({
             </div>
           ) : (
             <>
-              {/* Trade type selector */}
-              <div style={{ overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="[&::-webkit-scrollbar]:hidden">
+              {/* Trade type selector - HIDDEN */}
+              <div style={{ display: 'none', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="[&::-webkit-scrollbar]:hidden">
                 <TradeTypeChips
                   value={tradeType}
                   options={DIGIT_TRADE_TYPE_OPTIONS}
@@ -199,8 +199,8 @@ export function DigitsView({
                     </div>
                   </div>
 
-                  {/* Volatility Index */}
-                  <div style={{ padding: '12px', borderRadius: '6px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 12px rgba(255, 215, 0, 0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {/* Volatility Index - HIDDEN */}
+                  <div style={{ display: 'none', padding: '12px', borderRadius: '6px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 12px rgba(255, 215, 0, 0.3)', flexDirection: 'column', alignItems: 'center' }}>
                     <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgb(255, 215, 0)', marginBottom: '8px', letterSpacing: '0.5px' }}>
                       🎚️ VOLATILITY INDEX
                     </div>
@@ -361,8 +361,8 @@ export function DigitsView({
                     ))}
                   </div>
 
-                  {/* Trade Controls */}
-                  <div style={{ padding: '12px', borderRadius: '6px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 12px rgba(255, 215, 0, 0.3)', backgroundColor: 'rgba(255, 215, 0, 0.02)' }}>
+                  {/* Trade Controls - HIDDEN */}
+                  <div style={{ display: 'none', padding: '12px', borderRadius: '6px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 12px rgba(255, 215, 0, 0.3)', backgroundColor: 'rgba(255, 215, 0, 0.02)' }}>
                     <TradeControls
                       tradeType={tradeType}
                       contractMode={contractMode}
