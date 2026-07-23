@@ -64,52 +64,129 @@ export function Header({
   const isAuthenticating = authState === 'authenticating';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b bg-background/80 backdrop-blur-sm">
-      <div className="flex items-center gap-3">
-        {!logoSrc || logoError ? (
-          <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-            {logoLetter}
+    <header style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 50,
+      backgroundColor: 'rgba(10, 10, 10, 0.95)',
+      backdropFilter: 'blur(10px)',
+      borderBottom: '2px solid rgb(255, 215, 0)',
+      boxShadow: '0 0 15px rgba(255, 215, 0, 0.2)',
+    }} className="flex items-center justify-between px-4 py-3">
+      {/* Left section: DIRECT/PROXY buttons and title */}
+      <div className="flex items-center gap-4">
+        {/* DIRECT/PROXY buttons */}
+        <div className="flex gap-2">
+          <button style={{
+            padding: '6px 12px',
+            borderRadius: '4px',
+            border: '2px solid rgb(255, 215, 0)',
+            backgroundColor: 'rgba(255, 215, 0, 0.1)',
+            color: 'rgb(255, 215, 0)',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}>DIRECT</button>
+          <button style={{
+            padding: '6px 12px',
+            borderRadius: '4px',
+            border: '1px solid rgb(51, 51, 51)',
+            backgroundColor: 'transparent',
+            color: 'rgb(180, 180, 180)',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}>PROXY</button>
+        </div>
+
+        {/* Title */}
+        <div className="text-center hidden sm:block">
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'rgb(255, 215, 0)', textShadow: '0 0 10px rgba(255, 215, 0, 0.6)' }}>
+            👑 LAST DIGIT PREDICTION 👑
           </div>
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- next/image is avoided here intentionally: it errors in the optimizer when /logo.png is absent locally; a plain img with onError gives the same silent fallback behaviour
-          <img
-            src={logoSrc}
-            alt="App Logo"
-            className="h-8 w-auto object-contain"
-            onError={() => setLogoError(true)}
-          />
-        )}
-        <h1 className="text-lg font-semibold text-foreground hidden sm:block">
-          {process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading'}
-        </h1>
+          <div style={{ fontSize: '10px', color: 'rgb(255, 215, 0)', letterSpacing: '1px', marginTop: '2px' }}>
+            REAL-TIME AI ANALYSIS
+          </div>
+        </div>
       </div>
+
+      {/* Center section: Legend */}
+      <div className="hidden lg:flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-1">
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'rgb(0, 150, 255)' }} />
+          <span style={{ color: 'rgb(180, 180, 180)' }}>LIVE / CURRENT DIGIT</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'rgb(0, 255, 0)' }} />
+          <span style={{ color: 'rgb(180, 180, 180)' }}>HIGHEST %</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'rgb(255, 215, 0)' }} />
+          <span style={{ color: 'rgb(180, 180, 180)' }}>2ND HIGHEST %</span>
+        </div>
+      </div>
+
+      {/* Right section: LIVE indicator and auth */}
       <div className="flex items-center gap-3">
+        {/* LIVE indicator */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '6px 12px',
+          borderRadius: '4px',
+          border: '2px solid rgb(0, 255, 0)',
+          backgroundColor: 'rgba(0, 255, 0, 0.1)',
+        }}>
+          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'rgb(0, 255, 0)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'rgb(0, 255, 0)' }}>LIVE</span>
+        </div>
+
         {actions}
+
+        {/* Account section */}
         {isAuthenticated && activeAccount && (
           <Popover open={accountSwitcherOpen} onOpenChange={setAccountSwitcherOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-2 rounded-lg border border-border px-3 hover:bg-muted/50 transition-colors">
-                <div className="text-left">
+              <button style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                border: '1px solid rgb(51, 51, 51)',
+                backgroundColor: 'rgba(51, 51, 51, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(51, 51, 51, 0.5)';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(51, 51, 51, 0.3)';
+              }}>
+                <div className="text-left hidden sm:block">
                   <AccountLabel type={activeAccount.account_type} />
-                  <p className="text-base font-bold text-foreground">
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(255, 255, 255)' }}>
                     {formatBalance(activeAccount.balance)} {activeAccount.currency}
                   </p>
                 </div>
                 <svg
                   className={cn(
-                    'w-4 h-4 text-muted-foreground transition-transform',
+                    'w-4 h-4 transition-transform',
                     accountSwitcherOpen && 'rotate-180'
                   )}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
+                  style={{ color: 'rgb(180, 180, 180)' }}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-2">
+            <PopoverContent align="end" className="w-64 p-2" style={{ backgroundColor: 'rgb(26, 26, 26)', border: '1px solid rgb(51, 51, 51)' }}>
               <div className="space-y-1">
                 {accounts.map((account) => (
                   <button
@@ -118,15 +195,27 @@ export function Header({
                       onSwitchAccount(account.account_id);
                       setAccountSwitcherOpen(false);
                     }}
-                    className={cn(
-                      'w-full text-left rounded-lg px-3 py-2.5 transition-colors',
-                      account.account_id === activeAccount.account_id
-                        ? 'bg-muted'
-                        : 'hover:bg-muted/50'
-                    )}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      borderRadius: '6px',
+                      padding: '10px 12px',
+                      backgroundColor: account.account_id === activeAccount.account_id ? 'rgba(51, 51, 51, 0.5)' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (account.account_id !== activeAccount.account_id) {
+                        e.currentTarget.style.backgroundColor = 'rgba(51, 51, 51, 0.3)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = account.account_id === activeAccount.account_id ? 'rgba(51, 51, 51, 0.5)' : 'transparent';
+                    }}
                   >
                     <AccountLabel type={account.account_type} />
-                    <p className="text-base font-bold text-foreground">
+                    <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(255, 255, 255)' }}>
                       {formatBalance(account.balance)} {account.currency}
                     </p>
                   </button>
@@ -135,17 +224,18 @@ export function Header({
             </PopoverContent>
           </Popover>
         )}
+
         {isAuthenticated ? (
-          <Button variant="destructive" onClick={onLogout}>
+          <Button variant="destructive" onClick={onLogout} size="sm" style={{ backgroundColor: 'rgb(255, 51, 51)' }}>
             Logout
           </Button>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onLogin} disabled={isAuthenticating}>
+            <Button variant="outline" size="sm" onClick={onLogin} disabled={isAuthenticating} style={{ borderColor: 'rgb(255, 215, 0)', color: 'rgb(255, 215, 0)' }}>
               {isAuthenticating ? 'Logging in...' : 'Log in'}
             </Button>
             {onSignUp && (
-              <Button size="sm" onClick={onSignUp} disabled={isAuthenticating}>
+              <Button size="sm" onClick={onSignUp} disabled={isAuthenticating} style={{ backgroundColor: 'rgb(0, 255, 0)', color: 'rgb(10, 10, 10)' }}>
                 Sign up
               </Button>
             )}

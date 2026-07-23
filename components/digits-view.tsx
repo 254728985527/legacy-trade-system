@@ -1,15 +1,20 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Footer } from '@/components/custom/footer';
 import { Header } from '@/components/custom/header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CurrentTickDisplay } from './current-tick-display';
-import { DigitStatsBar } from './digit-stats-bar';
+import { ThemeToggle } from '@/components/custom/theme-toggle';
+import { NeonDigitDisplay } from './neon-digit-display';
+import { VolatilityGauge } from './volatility-gauge';
+import { IncomingTickGauge } from './incoming-tick-gauge';
+import { CursorTracker } from './cursor-tracker';
+import { AIEngineWorkflow } from './ai-engine-workflow';
+import { KeyDigitsPanel } from './key-digits-panel';
+import { DigitStrengthChart } from './digit-strength-chart';
+import { OverUnderGauge } from './over-under-gauge';
+import { AIEndpointCard } from './ai-endpoint-card';
 import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
-import { SymbolSelector } from '@/components/custom/symbol-selector';
-import { ThemeToggle } from '@/components/custom/theme-toggle';
 import type {
   AuthState,
   DerivAccount,
@@ -28,7 +33,6 @@ const DIGIT_TRADE_TYPE_OPTIONS: { value: TradeType; label: string }[] = [
 ];
 
 export interface DigitsViewProps {
-  // Auth
   authState: AuthState;
   accounts: DerivAccount[];
   activeAccount: DerivAccount | null;
@@ -36,13 +40,9 @@ export interface DigitsViewProps {
   onSignUp: () => Promise<void>;
   onLogout: () => void;
   onSwitchAccount: (accountId: string) => Promise<void>;
-
-  // Connection / loading
   isConnected: boolean;
   isLoading: boolean;
   error: string | null;
-
-  // Market data
   symbols: ActiveSymbol[];
   activeSymbol: ActiveSymbol | null;
   selectSymbol: (symbol: string) => void;
@@ -50,8 +50,6 @@ export interface DigitsViewProps {
   lastDigit: number | null;
   digitStats: DigitStats;
   pipSize: number;
-
-  // Trade controls
   tradeType: TradeType;
   setTradeType: (type: TradeType) => void;
   contractMode: ContractMode;
@@ -70,7 +68,6 @@ export interface DigitsViewProps {
   buyResult: BuyResult | null;
   buyError: string | null;
   clearBuyResult: () => void;
-  // Branding (used by preview route; no-op in the real app)
   logoSrc?: string;
   appName?: string;
 }
@@ -116,21 +113,34 @@ export function DigitsView({
 }: DigitsViewProps) {
   if (error) {
     return (
-      <main className="flex flex-col bg-background items-center justify-center px-4 min-h-dvh">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-destructive">Connection Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </CardContent>
-        </Card>
+      <main style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(10, 10, 10)', alignItems: 'center', justifyContent: 'center', padding: '16px', minHeight: '100dvh' }}>
+        <div style={{ maxWidth: '448px', width: '100%', padding: '24px', borderRadius: '12px', border: '1px solid rgb(51, 51, 51)' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: 'rgb(255, 51, 51)', marginBottom: '16px' }}>Connection Error</h1>
+          <p style={{ fontSize: '14px', color: 'rgb(180, 180, 180)' }}>{error}</p>
+        </div>
       </main>
     );
   }
 
+  const maxPct = Math.max(...digitStats.percentages);
+  const minPct = Math.min(...digitStats.percentages);
+  
+  // Calculate Under/Over totals
+  const underTotal = digitStats.percentages.slice(0, 5).reduce((a, b) => a + b, 0);
+  const overTotal = digitStats.percentages.slice(5, 10).reduce((a, b) => a + b, 0);
+
+  // Get key digits (highest, 2nd highest, lowest)
+  const sortedDigits = digitStats.percentages.map((pct, idx) => ({ digit: idx, pct })).sort((a, b) => b.pct - a.pct);
+  const keyDigits = [
+    { digit: sortedDigits[0].digit, percentage: sortedDigits[0].pct, rank: 'HIGHEST' as const },
+    { digit: sortedDigits[1].digit, percentage: sortedDigits[1].pct, rank: '2ND HIGHEST' as const },
+    { digit: sortedDigits[9].digit, percentage: sortedDigits[9].pct, rank: 'LOWEST' as const },
+  ];
+
+  const livePrice = currentTick ? currentTick.quote : 0;
+
   return (
-    <main className="flex flex-col bg-background max-lg:h-dvh max-lg:overflow-y-auto lg:overflow-visible">
+    <main style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(10, 10, 10)', minHeight: '100dvh', maxHeight: '100dvh', overflow: 'hidden' }}>
       <Header
         authState={authState}
         accounts={accounts}
@@ -143,100 +153,225 @@ export function DigitsView({
         appName={appName}
         actions={<ThemeToggle />}
       />
-      {/* Spacer to push content below fixed header — taller when authenticated (account bar visible) */}
-      <div className={authState === 'authenticated' ? 'h-[76px] shrink-0' : 'h-[66px] shrink-0'} />
 
-      {/* Scrollable content area — sits between header and sticky buy bar on mobile */}
-      <div className="flex w-full max-w-7xl mx-auto flex-col px-3 py-2 sm:px-4 sm:py-4 gap-2 sm:gap-3 lg:flex-none lg:overflow-visible pb-10">
-        {isLoading ? (
-          <>
-            {/* Trade type chips skeleton */}
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-32 rounded-full" />
-              <Skeleton className="h-8 w-28 rounded-full" />
-              <Skeleton className="h-8 w-24 rounded-full" />
-            </div>
-            {/* Main card skeleton */}
-            <Skeleton className="w-full h-[420px] rounded-xl" />
-          </>
-        ) : (
-          <>
-            <div className="shrink-0 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              <TradeTypeChips
-                value={tradeType}
-                options={DIGIT_TRADE_TYPE_OPTIONS}
-                onValueChange={setTradeType}
-              />
-            </div>
+      {/* Header spacer */}
+      <div style={{ height: authState === 'authenticated' ? '76px' : '66px', flexShrink: 0 }} />
 
-            <Card className="shrink-0 border shadow-sm mb-12">
-              <CardContent className="flex flex-col p-3 pt-3 sm:p-6 sm:pt-4 pb-2 sm:pb-6">
-                <div
-                  className={`lg:grid lg:overflow-visible ${tradeType !== 'even-odd' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
-                >
-                  {/* Column 1: Symbol selector + tick display */}
-                  <div className="flex flex-col pb-4 pt-1 sm:pb-6 sm:pt-2 lg:py-0 lg:pr-6">
-                    <SymbolSelector
-                      symbols={symbols}
-                      activeSymbol={activeSymbol}
-                      onSymbolChange={selectSymbol}
-                    />
-                    <div className="flex items-center justify-center min-h-24 sm:min-h-32 lg:flex-1">
-                      <CurrentTickDisplay
-                        tick={currentTick}
-                        lastDigit={lastDigit}
-                        activeSymbol={activeSymbol}
-                        pipSize={pipSize}
-                      />
+      {/* Scrollable main content */}
+      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '100%', maxWidth: 'none', marginX: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {isLoading ? (
+            <div>
+              <Skeleton className="h-8 w-64 rounded-full mb-4" />
+              <Skeleton className="w-full h-96 rounded-xl" />
+            </div>
+          ) : (
+            <>
+              {/* Trade type selector */}
+              <div style={{ overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="[&::-webkit-scrollbar]:hidden">
+                <TradeTypeChips
+                  value={tradeType}
+                  options={DIGIT_TRADE_TYPE_OPTIONS}
+                  onValueChange={setTradeType}
+                />
+              </div>
+
+              {/* Main 3-column grid layout */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                {/* LEFT COLUMN: Sidebar with gauges */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '280px' }}>
+                  {/* Live Price Display */}
+                  <div style={{ padding: '16px', borderRadius: '8px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.05)' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '600', color: 'rgb(255, 215, 0)', marginBottom: '8px', letterSpacing: '1px' }}>
+                      📊 LIVE PRICE
+                    </div>
+                    <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'rgb(255, 255, 255)', fontFamily: "'Courier New', monospace", marginBottom: '4px' }}>
+                      {livePrice.toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'rgb(180, 180, 180)', fontFamily: "'Courier New', monospace" }}>
+                      {activeSymbol?.symbol || 'VOL 75 (1S) INDEX'}
                     </div>
                   </div>
 
-                  {/* Columns 2+3 wrapper: stacked on mobile, transparent on desktop */}
-                  <div className="max-lg:border-t max-lg:divide-y divide-border lg:contents">
-                    {/* Column 2: Digit stats — hidden for Even/Odd */}
-                    {tradeType !== 'even-odd' && (
-                      <div className="py-4 sm:py-6 lg:py-0 lg:px-6 lg:border-l lg:border-border">
-                        <DigitStatsBar
-                          digitStats={digitStats}
-                          selectedDigit={selectedDigit}
-                          onDigitSelect={setSelectedDigit}
+                  {/* Volatility Index */}
+                  <VolatilityGauge volatility={75} label="VOLATILITY INDEX" />
+
+                  {/* Incoming Tick */}
+                  <IncomingTickGauge currentTick={32} totalTicks={1000} />
+
+                  {/* Cursor Tracker */}
+                  <CursorTracker current={1} target={4} remaining={3} nextDigits={[1, 2, 3, 4]} />
+                </div>
+
+                {/* MIDDLE-LEFT COLUMN: Digit 0-4 */}
+                <div style={{ padding: '16px', borderRadius: '8px', border: '2px solid rgb(0, 255, 0)', boxShadow: '0 0 15px rgba(0, 255, 0, 0.4), inset 0 0 10px rgba(0, 255, 0, 0.05)' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgb(0, 255, 0)', marginBottom: '16px', letterSpacing: '1px' }}>
+                    🎯 DIGIT 0 TO 4
+                  </div>
+
+                  {/* Digit circles */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                    {[0, 1, 2, 3, 4].map((digit) => (
+                      <div key={digit} onClick={() => setSelectedDigit(digit)} style={{ cursor: 'pointer' }}>
+                        <NeonDigitDisplay
+                          digit={digit}
+                          percentage={digitStats.percentages[digit]}
+                          isHighest={digitStats.percentages[digit] === maxPct && digit < 5}
+                          isLowest={digitStats.percentages[digit] === minPct}
+                          isSelected={selectedDigit === digit}
                         />
                       </div>
-                    )}
+                    ))}
+                  </div>
 
-                    {/* Column 3: Trade controls */}
-                    <div className="pt-4 sm:pt-6 lg:pt-0 lg:pl-6 lg:border-l lg:border-border">
-                      <TradeControls
-                        tradeType={tradeType}
-                        contractMode={contractMode}
-                        onContractModeChange={setContractMode}
-                        selectedDigit={selectedDigit}
-                        isConnected={isConnected}
-                        stake={stake}
-                        onStakeChange={setStake}
-                        duration={duration}
-                        onDurationChange={setDuration}
-                        durationLimits={durationLimits}
-                        proposal={proposal}
-                        isProposalLoading={isProposalLoading}
-                        onBuy={buyContract}
-                        isBuying={isBuying}
-                        buyResult={buyResult}
-                        buyError={buyError}
-                        onClearBuyResult={clearBuyResult}
-                        isAuthenticated={authState === 'authenticated'}
-                      />
+                  {/* Over/Under analysis */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px', backgroundColor: 'rgba(0, 255, 0, 0.05)', borderRadius: '6px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'rgb(0, 255, 0)', marginBottom: '4px' }}>OVER (Above 6.4%)</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'rgb(0, 255, 0)', fontFamily: "'Courier New', monospace" }}>
+                        {digitStats.percentages.slice(0, 5).filter(p => p > 6.4).length} Digits
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgb(0, 255, 0)', fontFamily: "'Courier New', monospace", marginTop: '4px' }}>
+                        {underTotal.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'rgb(255, 51, 51)', marginBottom: '4px' }}>UNDER (Below 6.4%) 📉</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'rgb(255, 51, 51)', fontFamily: "'Courier New', monospace" }}>
+                        0 - 1 Digit
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgb(255, 51, 51)', fontFamily: "'Courier New', monospace", marginTop: '4px' }}>
+                        {(100 - underTotal).toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
+
+                {/* MIDDLE-RIGHT COLUMN: Digit 5-9 */}
+                <div style={{ padding: '16px', borderRadius: '8px', border: '2px solid rgb(0, 255, 0)', boxShadow: '0 0 15px rgba(0, 255, 0, 0.4), inset 0 0 10px rgba(0, 255, 0, 0.05)' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgb(0, 255, 0)', marginBottom: '16px', letterSpacing: '1px' }}>
+                    🎯 DIGIT 5 TO 9
+                  </div>
+
+                  {/* Digit circles */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                    {[5, 6, 7, 8, 9].map((digit) => (
+                      <div key={digit} onClick={() => setSelectedDigit(digit)} style={{ cursor: 'pointer' }}>
+                        <NeonDigitDisplay
+                          digit={digit}
+                          percentage={digitStats.percentages[digit]}
+                          isHighest={digitStats.percentages[digit] === maxPct && digit >= 5}
+                          isLowest={digitStats.percentages[digit] === minPct}
+                          isSelected={selectedDigit === digit}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Over/Under analysis */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px', backgroundColor: 'rgba(0, 255, 0, 0.05)', borderRadius: '6px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'rgb(0, 255, 0)', marginBottom: '4px' }}>OVER (Above 6.4%)</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'rgb(0, 255, 0)', fontFamily: "'Courier New', monospace" }}>
+                        {digitStats.percentages.slice(5, 10).filter(p => p > 6.4).length} Digits
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgb(0, 255, 0)', fontFamily: "'Courier New', monospace", marginTop: '4px' }}>
+                        {overTotal.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'rgb(255, 51, 51)', marginBottom: '4px' }}>UNDER (Below 6.4%) 📉</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'rgb(255, 51, 51)', fontFamily: "'Courier New', monospace" }}>
+                        7 - 8 + 9
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgb(255, 51, 51)', fontFamily: "'Courier New', monospace", marginTop: '4px' }}>
+                        {(100 - overTotal).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: AI Engine & Analytics */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '280px' }}>
+                  {/* Key Digits Panel */}
+                  <KeyDigitsPanel digits={keyDigits} />
+
+                  {/* Trade Controls - compact view */}
+                  <div style={{ padding: '16px', borderRadius: '8px', border: '2px solid rgb(255, 215, 0)', boxShadow: '0 0 15px rgba(255, 215, 0, 0.4)', backgroundColor: 'rgba(255, 215, 0, 0.05)' }}>
+                    <TradeControls
+                      tradeType={tradeType}
+                      contractMode={contractMode}
+                      onContractModeChange={setContractMode}
+                      selectedDigit={selectedDigit}
+                      isConnected={isConnected}
+                      stake={stake}
+                      onStakeChange={setStake}
+                      duration={duration}
+                      onDurationChange={setDuration}
+                      durationLimits={durationLimits}
+                      proposal={proposal}
+                      isProposalLoading={isProposalLoading}
+                      onBuy={buyContract}
+                      isBuying={isBuying}
+                      buyResult={buyResult}
+                      buyError={buyError}
+                      onClearBuyResult={clearBuyResult}
+                      isAuthenticated={authState === 'authenticated'}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom full-width sections */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginTop: '8px' }}>
+                {/* AI Engine Workflow */}
+                <div style={{ gridColumn: 'span 1' }}>
+                  <AIEngineWorkflow
+                    currentStep={2}
+                    entryPoint={4}
+                    liveCursor={0}
+                    confirmationDigit={3}
+                    tradeStatus="EXECUTING"
+                    confidence={84.4}
+                  />
+                </div>
+
+                {/* Over/Under Gauge */}
+                <div>
+                  <OverUnderGauge underPercentage={underTotal} overPercentage={overTotal} />
+                </div>
+
+                {/* AI Endpoint Card */}
+                <div>
+                  <AIEndpointCard
+                    underEndpoint={4}
+                    underConfidence={84.4}
+                    underStrongest={4}
+                    underWeakest={2}
+                    overEndpoint={6}
+                    overConfidence={15.6}
+                    overStrongest={6}
+                    overWeakest={8}
+                    activeDirection="UNDER"
+                    recommendation="TAKE TRADE"
+                  />
+                </div>
+              </div>
+
+              {/* Digit Strength Chart */}
+              <div style={{ marginTop: '8px' }}>
+                <DigitStrengthChart percentages={digitStats.percentages} />
+              </div>
+
+              {/* Bottom spacer for footer */}
+              <div style={{ height: '80px', flexShrink: 0 }} />
+            </>
+          )}
+        </div>
       </div>
 
       {/* Fixed footer */}
-      <div className="fixed bottom-0 left-0 right-0 py-2 text-center bg-background/80 backdrop-blur-sm">
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40 }}>
         <Footer />
       </div>
     </main>

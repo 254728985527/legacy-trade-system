@@ -1,2 +1,175 @@
-/* Custom CSS for this template */
-/* Add your custom styles here */
+/* Custom CSS for neon trading dashboard theme */
+
+:root {
+  /* Neon theme colors */
+  --neon-gold: #FFD700;
+  --neon-gold-accent: #F4A500;
+  --neon-green: #00FF00;
+  --neon-red: #FF3333;
+  --neon-dark-bg: #0a0a0a;
+  --neon-card-bg: #1a1a1a;
+  --neon-border: #333333;
+}
+
+.dark {
+  --background: 10 10 10;
+  --card: 26 26 26;
+  --border: 51 51 51 / 0.5;
+  --foreground: 255 255 255;
+  --muted-foreground: 180 180 180;
+}
+
+/* Neon glow effects */
+.neon-glow {
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.neon-glow-green {
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8), 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
+.neon-glow-red {
+  text-shadow: 0 0 10px rgba(255, 51, 51, 0.8), 0 0 20px rgba(255, 51, 51, 0.4);
+}
+
+.neon-border-gold {
+  border: 2px solid rgb(255, 215, 0);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.1);
+}
+
+.neon-border-green {
+  border: 2px solid rgb(0, 255, 0);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6), inset 0 0 15px rgba(0, 255, 0, 0.1);
+}
+
+.neon-border-red {
+  border: 2px solid rgb(255, 51, 51);
+  box-shadow: 0 0 15px rgba(255, 51, 51, 0.6), inset 0 0 15px rgba(255, 51, 51, 0.1);
+}
+
+.neon-border-dim {
+  border: 1px solid rgb(51, 51, 51);
+  box-shadow: 0 0 8px rgba(51, 51, 51, 0.3);
+}
+
+/* Circular digit display styles */
+.digit-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.digit-circle-highlight {
+  border: 3px solid rgb(0, 255, 0);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+}
+
+.digit-circle-normal {
+  border: 2px solid rgb(51, 51, 51);
+  box-shadow: 0 0 8px rgba(51, 51, 51, 0.3);
+}
+
+/* Circular gauge styles */
+.circular-gauge {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  position: relative;
+}
+
+.gauge-gold {
+  border-color: rgb(255, 215, 0);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.1);
+  color: rgb(255, 215, 0);
+}
+
+.gauge-green {
+  border-color: rgb(0, 255, 0);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6), inset 0 0 15px rgba(0, 255, 0, 0.1);
+  color: rgb(0, 255, 0);
+}
+
+/* Workflow step styling */
+.workflow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid rgb(0, 255, 0);
+  color: rgb(0, 255, 0);
+}
+
+.step-arrow {
+  font-size: 24px;
+  color: rgb(0, 255, 0);
+}
+
+/* Status badges */
+.status-success {
+  color: rgb(0, 255, 0);
+  font-weight: bold;
+}
+
+.status-error {
+  color: rgb(255, 51, 51);
+  font-weight: bold;
+}
+
+/* Gold and green accent text */
+.text-gold {
+  color: rgb(255, 215, 0);
+}
+
+.text-gold-accent {
+  color: rgb(244, 165, 0);
+}
+
+.text-neon-green {
+  color: rgb(0, 255, 0);
+}
+
+.text-neon-red {
+  color: rgb(255, 51, 51);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .digit-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .circular-gauge {
+    width: 80px;
+    height: 80px;
+  }
+
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}
