@@ -1,7 +1,7 @@
 'use client';
 
-import { LastDigitDashboard } from '@/components/last-digit-dashboard';
+import { LastDigitDashboardV2 } from '@/components/last-digit-dashboard-v2';
 
 export default function PredictionLandingPage() {
-  return <LastDigitDashboard />;
+  return <LastDigitDashboardV2 />;
 }
