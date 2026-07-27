@@ -10,6 +10,19 @@ import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
+import {
+  VolatilityIndexPanel,
+  LivePricePanel,
+  IncomingTickPanel,
+  LiveCursorTrackerPanel,
+  DigitPanel,
+  AIEngineWorkflowPanel,
+  DigitStrengthRankingPanel,
+  KeyDigitsPanel,
+  SignalPanel,
+  TotalPercentagePanel,
+  AIEndpointPanel,
+} from './dashboard-panels';
 import type {
   AuthState,
   DerivAccount,
@@ -130,7 +143,7 @@ export function DigitsView({
   }
 
   return (
-    <main className="flex flex-col bg-background max-lg:h-dvh max-lg:overflow-y-auto lg:overflow-visible">
+    <main className="dashboard-container">
       <Header
         authState={authState}
         accounts={accounts}
@@ -143,100 +156,106 @@ export function DigitsView({
         appName={appName}
         actions={<ThemeToggle />}
       />
-      {/* Spacer to push content below fixed header — taller when authenticated (account bar visible) */}
       <div className={authState === 'authenticated' ? 'h-[76px] shrink-0' : 'h-[66px] shrink-0'} />
 
-      {/* Scrollable content area — sits between header and sticky buy bar on mobile */}
-      <div className="flex w-full max-w-7xl mx-auto flex-col px-3 py-2 sm:px-4 sm:py-4 gap-2 sm:gap-3 lg:flex-none lg:overflow-visible pb-10">
-        {isLoading ? (
-          <>
-            {/* Trade type chips skeleton */}
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-32 rounded-full" />
-              <Skeleton className="h-8 w-28 rounded-full" />
-              <Skeleton className="h-8 w-24 rounded-full" />
+      {isLoading ? (
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-96 w-full rounded-lg" />
+        </div>
+      ) : (
+        <div className="w-full overflow-x-hidden overflow-y-auto pb-24">
+          {/* Header Section */}
+          <div className="border-b border-primary/20 px-4 py-6">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 mb-2">
+                <span className="text-primary font-bold text-xs uppercase tracking-wider">Direct</span>
+              </div>
+              <h1 className="header-title">
+                <span>👑</span> LAST DIGIT PREDICTION <span>👑</span>
+              </h1>
+              <p className="header-subtitle mt-2">REAL-TIME AI ANALYSIS</p>
+              <div className="flex items-center justify-center gap-6 mt-4 text-xs">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span> LIVE / CURRENT DIGIT
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-secondary"></span> HIGHEST %
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary"></span> 2ND HIGHEST %
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500"></span> LOWEST %
+                </span>
+              </div>
             </div>
-            {/* Main card skeleton */}
-            <Skeleton className="w-full h-[420px] rounded-xl" />
-          </>
-        ) : (
-          <>
-            <div className="shrink-0 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              <TradeTypeChips
-                value={tradeType}
-                options={DIGIT_TRADE_TYPE_OPTIONS}
-                onValueChange={setTradeType}
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Left Sidebar */}
+            <div className="lg:col-span-2 space-y-4">
+              <VolatilityIndexPanel />
+              <LivePricePanel currentTick={currentTick} activeSymbol={activeSymbol} />
+              <IncomingTickPanel lastDigit={lastDigit} />
+              <LiveCursorTrackerPanel selectedDigit={selectedDigit} />
+            </div>
+
+            {/* Center Main Content */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Digit Panels */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <DigitPanel rangeStart={0} rangeEnd={4} currentTick={currentTick} />
+                <DigitPanel rangeStart={5} rangeEnd={9} currentTick={currentTick} />
+              </div>
+
+              {/* AI Engine Workflow */}
+              <AIEngineWorkflowPanel />
+
+              {/* Digit Strength Ranking */}
+              <DigitStrengthRankingPanel digitStats={digitStats} />
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="lg:col-span-2 space-y-4">
+              <KeyDigitsPanel digitStats={digitStats} />
+              <SignalPanel selectedDigit={selectedDigit} />
+              <TotalPercentagePanel digitStats={digitStats} />
+              <AIEndpointPanel selectedDigit={selectedDigit} />
+            </div>
+          </div>
+
+          {/* Trade Controls Section */}
+          <div className="border-t border-primary/20 px-4 py-6 mt-6">
+            <div className="max-w-7xl mx-auto">
+              <TradeControls
+                tradeType={tradeType}
+                contractMode={contractMode}
+                onContractModeChange={setContractMode}
+                selectedDigit={selectedDigit}
+                isConnected={isConnected}
+                stake={stake}
+                onStakeChange={setStake}
+                duration={duration}
+                onDurationChange={setDuration}
+                durationLimits={durationLimits}
+                proposal={proposal}
+                isProposalLoading={isProposalLoading}
+                onBuy={buyContract}
+                isBuying={isBuying}
+                buyResult={buyResult}
+                buyError={buyError}
+                onClearBuyResult={clearBuyResult}
+                isAuthenticated={authState === 'authenticated'}
               />
             </div>
+          </div>
+        </div>
+      )}
 
-            <Card className="shrink-0 border shadow-sm mb-12">
-              <CardContent className="flex flex-col p-3 pt-3 sm:p-6 sm:pt-4 pb-2 sm:pb-6">
-                <div
-                  className={`lg:grid lg:overflow-visible ${tradeType !== 'even-odd' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
-                >
-                  {/* Column 1: Symbol selector + tick display */}
-                  <div className="flex flex-col pb-4 pt-1 sm:pb-6 sm:pt-2 lg:py-0 lg:pr-6">
-                    <SymbolSelector
-                      symbols={symbols}
-                      activeSymbol={activeSymbol}
-                      onSymbolChange={selectSymbol}
-                    />
-                    <div className="flex items-center justify-center min-h-24 sm:min-h-32 lg:flex-1">
-                      <CurrentTickDisplay
-                        tick={currentTick}
-                        lastDigit={lastDigit}
-                        activeSymbol={activeSymbol}
-                        pipSize={pipSize}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Columns 2+3 wrapper: stacked on mobile, transparent on desktop */}
-                  <div className="max-lg:border-t max-lg:divide-y divide-border lg:contents">
-                    {/* Column 2: Digit stats — hidden for Even/Odd */}
-                    {tradeType !== 'even-odd' && (
-                      <div className="py-4 sm:py-6 lg:py-0 lg:px-6 lg:border-l lg:border-border">
-                        <DigitStatsBar
-                          digitStats={digitStats}
-                          selectedDigit={selectedDigit}
-                          onDigitSelect={setSelectedDigit}
-                        />
-                      </div>
-                    )}
-
-                    {/* Column 3: Trade controls */}
-                    <div className="pt-4 sm:pt-6 lg:pt-0 lg:pl-6 lg:border-l lg:border-border">
-                      <TradeControls
-                        tradeType={tradeType}
-                        contractMode={contractMode}
-                        onContractModeChange={setContractMode}
-                        selectedDigit={selectedDigit}
-                        isConnected={isConnected}
-                        stake={stake}
-                        onStakeChange={setStake}
-                        duration={duration}
-                        onDurationChange={setDuration}
-                        durationLimits={durationLimits}
-                        proposal={proposal}
-                        isProposalLoading={isProposalLoading}
-                        onBuy={buyContract}
-                        isBuying={isBuying}
-                        buyResult={buyResult}
-                        buyError={buyError}
-                        onClearBuyResult={clearBuyResult}
-                        isAuthenticated={authState === 'authenticated'}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
-
-      {/* Fixed footer */}
-      <div className="fixed bottom-0 left-0 right-0 py-2 text-center bg-background/80 backdrop-blur-sm">
+      {/* Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 border-t border-primary/20 bg-background/95 backdrop-blur-sm">
         <Footer />
       </div>
     </main>

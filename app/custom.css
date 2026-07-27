@@ -1,2 +1,349 @@
-/* Custom CSS for this template */
-/* Add your custom styles here */
+/* Custom CSS for Last Digit Prediction Dashboard */
+
+/* Dashboard container */
+.dashboard-container {
+  @apply min-h-screen bg-background text-foreground;
+}
+
+/* Panel borders with gold accent */
+.panel {
+  @apply border border-primary/30 rounded-lg bg-card;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+.panel-header {
+  @apply px-4 py-3 border-b border-primary/20 flex items-center gap-2;
+}
+
+.panel-header-title {
+  @apply text-primary font-bold text-sm tracking-wide uppercase;
+}
+
+/* Digit circles */
+.digit-circle {
+  @apply w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-lg transition-all;
+}
+
+.digit-circle.active {
+  @apply border-secondary bg-secondary/20 text-secondary;
+}
+
+.digit-circle.neutral {
+  @apply border-primary/50 text-foreground;
+}
+
+.digit-circle.strong {
+  @apply border-secondary text-secondary;
+}
+
+.digit-circle.weak {
+  @apply border-destructive text-destructive;
+}
+
+/* Percentage displays */
+.percentage-text {
+  @apply font-bold text-lg;
+}
+
+.percentage-positive {
+  @apply text-secondary;
+}
+
+.percentage-negative {
+  @apply text-destructive;
+}
+
+.percentage-neutral {
+  @apply text-primary;
+}
+
+/* Key digits panel */
+.key-digits-item {
+  @apply flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-card;
+}
+
+.key-digit-number {
+  @apply w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2;
+}
+
+.key-digit-number.highest {
+  @apply border-secondary text-secondary;
+}
+
+.key-digit-number.second-highest {
+  @apply border-primary text-primary;
+}
+
+.key-digit-number.lowest {
+  @apply border-destructive text-destructive;
+}
+
+/* AI Endpoint display */
+.ai-endpoint-container {
+  @apply p-4 rounded-lg border border-secondary/30 bg-secondary/5;
+}
+
+.ai-endpoint-label {
+  @apply text-secondary text-xs font-bold uppercase tracking-wider;
+}
+
+.ai-endpoint-value {
+  @apply text-3xl font-bold text-secondary mt-2;
+}
+
+.ai-endpoint-side {
+  @apply text-secondary text-sm font-semibold mt-1;
+}
+
+/* Strength badge */
+.strength-badge {
+  @apply px-2 py-1 rounded text-xs font-bold;
+}
+
+.strength-strong {
+  @apply bg-secondary/20 text-secondary;
+}
+
+.strength-weak {
+  @apply bg-destructive/20 text-destructive;
+}
+
+/* Workflow step */
+.workflow-step {
+  @apply flex flex-col items-center gap-2;
+}
+
+.workflow-step-number {
+  @apply w-8 h-8 rounded-full border-2 border-secondary flex items-center justify-center font-bold text-secondary text-xs;
+}
+
+.workflow-step-label {
+  @apply text-secondary font-bold text-xs uppercase text-center;
+}
+
+.workflow-arrow {
+  @apply text-secondary text-xl;
+}
+
+/* Status indicators */
+.status-valid {
+  @apply text-secondary;
+}
+
+.status-invalid {
+  @apply text-destructive;
+}
+
+.status-executing {
+  @apply text-primary;
+}
+
+/* Confidence meter */
+.confidence-value {
+  @apply text-3xl font-bold text-primary;
+}
+
+.confidence-label {
+  @apply text-xs font-bold uppercase text-primary;
+}
+
+/* Direction indicator */
+.direction-under {
+  @apply text-secondary;
+}
+
+.direction-over {
+  @apply text-primary;
+}
+
+/* Bar chart strength */
+.strength-bar {
+  @apply rounded-t-lg transition-all;
+}
+
+.strength-bar.strong {
+  @apply bg-secondary;
+}
+
+.strength-bar.neutral {
+  @apply bg-primary;
+}
+
+.strength-bar.weak {
+  @apply bg-destructive;
+}
+
+/* Percentage indicators in columns */
+.percentage-column {
+  @apply text-center;
+}
+
+.percentage-label {
+  @apply text-xs font-semibold text-muted-foreground uppercase;
+}
+
+.percentage-value {
+  @apply text-sm font-bold mt-1;
+}
+
+/* Over/Under sections */
+.section-over {
+  @apply border-l-4 border-primary;
+}
+
+.section-under {
+  @apply border-l-4 border-secondary;
+}
+
+/* Threshold display */
+.threshold-badge {
+  @apply px-3 py-1 rounded-full border-2 font-bold text-xs;
+}
+
+.threshold-badge.active {
+  @apply border-primary bg-primary/10 text-primary;
+}
+
+/* Toggle/chip styles */
+.prediction-chip {
+  @apply px-4 py-2 rounded-full border-2 transition-all cursor-pointer;
+}
+
+.prediction-chip.active {
+  @apply border-primary bg-primary/10 text-primary;
+}
+
+.prediction-chip.inactive {
+  @apply border-border/50 text-muted-foreground;
+}
+
+/* Star rating */
+.star-icon {
+  @apply text-primary inline-block;
+}
+
+/* Header styling */
+.header-title {
+  @apply text-2xl font-bold text-primary flex items-center justify-center gap-2;
+}
+
+.header-subtitle {
+  @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider;
+}
+
+/* Live indicator */
+.live-badge {
+  @apply px-3 py-1 rounded-lg border-2 border-secondary text-secondary font-bold text-xs inline-flex items-center gap-2;
+}
+
+.live-dot {
+  @apply w-2 h-2 rounded-full bg-secondary animate-pulse;
+}
+
+/* Direct badge */
+.direct-badge {
+  @apply px-3 py-1 rounded-lg border-2 border-primary text-primary font-bold text-xs;
+}
+
+/* Top/Signal labels */
+.top-label {
+  @apply px-2 py-1 bg-primary/20 text-primary font-bold text-xs rounded;
+}
+
+/* Footer navigation */
+.footer-nav {
+  @apply flex items-center justify-center gap-6 py-4 text-sm text-muted-foreground;
+}
+
+.footer-nav-item {
+  @apply flex items-center gap-2 hover:text-primary transition-colors;
+}
+
+.footer-nav-icon {
+  @apply w-5 h-5;
+}
+
+/* Price display */
+.price-large {
+  @apply text-4xl font-bold text-foreground;
+}
+
+.price-symbol {
+  @apply text-primary font-bold;
+}
+
+/* Index label */
+.index-label {
+  @apply text-xs text-muted-foreground font-semibold;
+}
+
+/* Incoming tick section */
+.incoming-tick-container {
+  @apply rounded-full border-4 border-primary/50 w-32 h-32 flex flex-col items-center justify-center;
+}
+
+.incoming-tick-number {
+  @apply text-5xl font-bold text-primary;
+}
+
+.incoming-tick-stars {
+  @apply text-primary text-lg;
+}
+
+/* Cursor tracker */
+.cursor-tracker-item {
+  @apply flex items-center justify-between text-sm;
+}
+
+.cursor-tracker-label {
+  @apply text-muted-foreground;
+}
+
+.cursor-tracker-value {
+  @apply text-foreground font-bold;
+}
+
+/* Signal recommendation */
+.signal-recommendation {
+  @apply flex items-center gap-2 text-sm font-semibold text-secondary;
+}
+
+/* Confidence stars */
+.confidence-stars {
+  @apply text-primary text-lg;
+}
+
+/* Progress bar */
+.progress-bar {
+  @apply w-full h-2 bg-muted rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full transition-all;
+}
+
+.progress-fill.positive {
+  @apply bg-secondary;
+}
+
+.progress-fill.negative {
+  @apply bg-destructive;
+}
+
+/* Tooltip */
+.tooltip {
+  @apply text-xs text-muted-foreground;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    @apply grid grid-cols-1 gap-3;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dashboard-grid {
+    @apply grid gap-4;
+  }
+}
