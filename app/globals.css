@@ -130,5 +130,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background: 
+      radial-gradient(ellipse 200% 100% at 50% 0%, rgba(212, 175, 55, 0.03), transparent 50%),
+      radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0, 195, 144, 0.02), transparent 50%),
+      linear-gradient(180deg, #0F0F19 0%, #0D0D1B 100%);
+    background-attachment: fixed;
   }
 }

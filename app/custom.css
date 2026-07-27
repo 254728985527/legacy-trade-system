@@ -5,39 +5,61 @@
   @apply min-h-screen bg-background text-foreground;
 }
 
-/* Panel borders with gold accent */
+/* Panel borders with gold accent - Glassmorphism effect */
 .panel {
-  @apply border border-primary/30 rounded-lg bg-card;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+  @apply border border-primary/30 rounded-xl bg-card;
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.9) 0%, rgba(35, 35, 55, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(212, 175, 55, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 0 60px rgba(0, 195, 144, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.35);
 }
 
 .panel-header {
-  @apply px-4 py-3 border-b border-primary/20 flex items-center gap-2;
+  @apply px-4 py-3 border-b border-primary/25 flex items-center gap-2;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%);
+  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
 }
 
 .panel-header-title {
-  @apply text-primary font-bold text-sm tracking-wide uppercase;
+  @apply text-primary font-bold text-xs tracking-[0.15em] uppercase;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  letter-spacing: 0.15em;
 }
 
-/* Digit circles */
+/* Digit circles - Premium styling with depth */
 .digit-circle {
   @apply w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-lg transition-all;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  backdrop-filter: blur(8px);
 }
 
 .digit-circle.active {
-  @apply border-secondary bg-secondary/20 text-secondary;
+  @apply border-secondary text-secondary;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 195, 144, 0.3), rgba(0, 195, 144, 0.05));
+  box-shadow: 
+    0 0 30px rgba(0, 195, 144, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .digit-circle.neutral {
-  @apply border-primary/50 text-foreground;
+  @apply border-primary/60 text-foreground;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.1), transparent);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
 }
 
 .digit-circle.strong {
   @apply border-secondary text-secondary;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 195, 144, 0.25), rgba(0, 195, 144, 0.03));
+  box-shadow: 0 0 25px rgba(0, 195, 144, 0.35);
 }
 
 .digit-circle.weak {
   @apply border-destructive text-destructive;
+  background: radial-gradient(circle at 30% 30%, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.02));
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.25);
 }
 
 /* Percentage displays */
@@ -57,72 +79,102 @@
   @apply text-primary;
 }
 
-/* Key digits panel */
+/* Key digits panel - Premium styling */
 .key-digits-item {
-  @apply flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-card;
+  @apply flex items-center justify-between p-4 rounded-lg border border-primary/25 bg-card;
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.6), rgba(35, 35, 55, 0.5));
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.06);
 }
 
 .key-digit-number {
   @apply w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(6px);
 }
 
 .key-digit-number.highest {
   @apply border-secondary text-secondary;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 195, 144, 0.25), rgba(0, 195, 144, 0.03));
+  box-shadow: 0 0 20px rgba(0, 195, 144, 0.4);
 }
 
 .key-digit-number.second-highest {
   @apply border-primary text-primary;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.02));
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
 }
 
 .key-digit-number.lowest {
   @apply border-destructive text-destructive;
+  background: radial-gradient(circle at 30% 30%, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.02));
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.3);
 }
 
-/* AI Endpoint display */
+/* AI Endpoint display - Premium styling */
 .ai-endpoint-container {
-  @apply p-4 rounded-lg border border-secondary/30 bg-secondary/5;
+  @apply p-4 rounded-lg border border-secondary/40 bg-card;
+  background: linear-gradient(135deg, rgba(0, 195, 144, 0.08), rgba(0, 195, 144, 0.03));
+  border: 1px solid rgba(0, 195, 144, 0.35);
+  box-shadow: 
+    0 4px 16px rgba(0, 195, 144, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .ai-endpoint-label {
-  @apply text-secondary text-xs font-bold uppercase tracking-wider;
+  @apply text-secondary text-xs font-bold uppercase tracking-[0.15em];
+  text-shadow: 0 2px 6px rgba(0, 195, 144, 0.2);
 }
 
 .ai-endpoint-value {
-  @apply text-3xl font-bold text-secondary mt-2;
+  @apply text-4xl font-black text-secondary mt-2;
+  text-shadow: 0 4px 12px rgba(0, 195, 144, 0.3);
 }
 
 .ai-endpoint-side {
-  @apply text-secondary text-sm font-semibold mt-1;
+  @apply text-secondary text-sm font-bold mt-2;
+  text-shadow: 0 2px 6px rgba(0, 195, 144, 0.2);
 }
 
-/* Strength badge */
+/* Strength badge - Premium styling */
 .strength-badge {
-  @apply px-2 py-1 rounded text-xs font-bold;
+  @apply px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider;
+  backdrop-filter: blur(6px);
 }
 
 .strength-strong {
-  @apply bg-secondary/20 text-secondary;
+  background: linear-gradient(135deg, rgba(0, 195, 144, 0.2), rgba(0, 195, 144, 0.1));
+  @apply text-secondary border border-secondary/40;
+  box-shadow: 0 4px 12px rgba(0, 195, 144, 0.15);
 }
 
 .strength-weak {
-  @apply bg-destructive/20 text-destructive;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.1));
+  @apply text-destructive border border-destructive/40;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
 }
 
-/* Workflow step */
+/* Workflow step - Premium styling */
 .workflow-step {
   @apply flex flex-col items-center gap-2;
 }
 
 .workflow-step-number {
   @apply w-8 h-8 rounded-full border-2 border-secondary flex items-center justify-center font-bold text-secondary text-xs;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 195, 144, 0.2), rgba(0, 195, 144, 0.03));
+  box-shadow: 0 0 12px rgba(0, 195, 144, 0.35);
+  backdrop-filter: blur(6px);
 }
 
 .workflow-step-label {
-  @apply text-secondary font-bold text-xs uppercase text-center;
+  @apply text-secondary font-bold text-xs uppercase text-center tracking-wider;
+  text-shadow: 0 2px 6px rgba(0, 195, 144, 0.2);
 }
 
 .workflow-arrow {
   @apply text-secondary text-xl;
+  text-shadow: 0 2px 6px rgba(0, 195, 144, 0.2);
 }
 
 /* Status indicators */
@@ -156,21 +208,25 @@
   @apply text-primary;
 }
 
-/* Bar chart strength */
+/* Bar chart strength - Gradient fills */
 .strength-bar {
   @apply rounded-t-lg transition-all;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .strength-bar.strong {
-  @apply bg-secondary;
+  background: linear-gradient(180deg, rgba(0, 195, 144, 0.9) 0%, rgba(0, 195, 144, 0.6) 100%);
+  box-shadow: 0 -4px 16px rgba(0, 195, 144, 0.4);
 }
 
 .strength-bar.neutral {
-  @apply bg-primary;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.9) 0%, rgba(212, 175, 55, 0.6) 100%);
+  box-shadow: 0 -4px 16px rgba(212, 175, 55, 0.3);
 }
 
 .strength-bar.weak {
-  @apply bg-destructive;
+  background: linear-gradient(180deg, rgba(220, 38, 38, 0.9) 0%, rgba(220, 38, 38, 0.6) 100%);
+  box-shadow: 0 -4px 16px rgba(220, 38, 38, 0.3);
 }
 
 /* Percentage indicators in columns */
@@ -222,13 +278,19 @@
   @apply text-primary inline-block;
 }
 
-/* Header styling */
+/* Header styling - Premium typography */
 .header-title {
-  @apply text-2xl font-bold text-primary flex items-center justify-center gap-2;
+  @apply text-3xl font-black text-primary flex items-center justify-center gap-3;
+  letter-spacing: 0.08em;
+  text-shadow: 
+    0 4px 16px rgba(212, 175, 55, 0.3),
+    0 2px 8px rgba(0, 195, 144, 0.1);
 }
 
 .header-subtitle {
-  @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider;
+  @apply text-xs font-bold text-primary/80 uppercase tracking-[0.2em];
+  letter-spacing: 0.2em;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
 }
 
 /* Live indicator */
@@ -263,13 +325,16 @@
   @apply w-5 h-5;
 }
 
-/* Price display */
+/* Price display - Premium styling */
 .price-large {
-  @apply text-4xl font-bold text-foreground;
+  @apply text-5xl font-black text-foreground;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
 }
 
 .price-symbol {
-  @apply text-primary font-bold;
+  @apply text-primary font-bold text-lg;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
 }
 
 /* Index label */
@@ -277,17 +342,24 @@
   @apply text-xs text-muted-foreground font-semibold;
 }
 
-/* Incoming tick section */
+/* Incoming tick section - Premium styling */
 .incoming-tick-container {
-  @apply rounded-full border-4 border-primary/50 w-32 h-32 flex flex-col items-center justify-center;
+  @apply rounded-full w-32 h-32 flex flex-col items-center justify-center border-4 border-primary/50;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.02));
+  box-shadow: 
+    0 0 40px rgba(212, 175, 55, 0.3),
+    inset 0 0 30px rgba(212, 175, 55, 0.1);
+  border: 3px solid rgba(212, 175, 55, 0.45);
 }
 
 .incoming-tick-number {
-  @apply text-5xl font-bold text-primary;
+  @apply text-5xl font-black text-primary;
+  text-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
 }
 
 .incoming-tick-stars {
   @apply text-primary text-lg;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
 }
 
 /* Cursor tracker */
@@ -297,6 +369,95 @@
 
 .cursor-tracker-label {
   @apply text-muted-foreground;
+}
+
+/* Premium animations and transitions */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+}
+
+@keyframes color-shift {
+  0%, 100% {
+    color: rgba(212, 175, 55, 1);
+  }
+  50% {
+    color: rgba(212, 175, 55, 0.8);
+  }
+}
+
+/* Live indicator animation */
+.live-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* Panel hover effects */
+.panel {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel:hover {
+  box-shadow: 
+    0 12px 48px rgba(212, 175, 55, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 0 80px rgba(0, 195, 144, 0.08);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+/* Button-like element hover states */
+.prediction-chip {
+  @apply transition-all;
+}
+
+.prediction-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(212, 175, 55, 0.2);
+}
+
+/* Percentage bar animation */
+.strength-bar {
+  animation: bar-grow 0.6s ease-out;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* Text glow for important numbers */
+.confidence-value,
+.ai-endpoint-value,
+.price-large {
+  animation: text-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes text-shimmer {
+  0%, 100% {
+    text-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+  }
+  50% {
+    text-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  }
 }
 
 .cursor-tracker-value {
