@@ -6,28 +6,33 @@ import type { Tick } from '../lib/types';
 import type { ActiveSymbol } from '../lib/types';
 import type { DigitStats } from '../lib/types';
 
-// Volatility indices available (1s resolution)
-const VOLATILITY_INDICES = [
-  { symbol: '1HZ10V', label: 'Vol 10 (1s)', display: 'Volatility 10' },
-  { symbol: '1HZ25V', label: 'Vol 25 (1s)', display: 'Volatility 25' },
-  { symbol: '1HZ50V', label: 'Vol 50 (1s)', display: 'Volatility 50' },
-  { symbol: '1HZ75V', label: 'Vol 75 (1s)', display: 'Volatility 75' },
-  { symbol: '1HZ100V', label: 'Vol 100 (1s)', display: 'Volatility 100' },
-  { symbol: '1HZ150V', label: 'Vol 150 (1s)', display: 'Volatility 150' },
-  { symbol: '1HZ200V', label: 'Vol 200 (1s)', display: 'Volatility 200' },
-  { symbol: '1HZ250V', label: 'Vol 250 (1s)', display: 'Volatility 250' },
-  { symbol: '1HZ300V', label: 'Vol 300 (1s)', display: 'Volatility 300' },
-];
+// Helper to extract all volatility indices from Deriv symbols
+function extractVolatilityIndices(symbols: ActiveSymbol[]): Array<{ symbol: string; label: string; display: string }> {
+  return symbols
+    .filter(s => s.submarket === 'volidx')
+    .sort((a, b) => {
+      const aNum = parseInt(a.underlying_symbol?.match(/\d+/)?.[0] || '0');
+      const bNum = parseInt(b.underlying_symbol?.match(/\d+/)?.[0] || '0');
+      return aNum - bNum;
+    })
+    .map(s => ({
+      symbol: s.underlying_symbol || '',
+      label: s.underlying_symbol_name || s.underlying_symbol || '',
+      display: s.underlying_symbol_name || s.underlying_symbol || '',
+    }));
+}
 
 export interface VolatilityIndexPanelProps {
   selectedVolatility: string;
   onSelectVolatility: (symbol: string) => void;
+  symbols: ActiveSymbol[];
   isLoading?: boolean;
 }
 
-export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, isLoading = false }: VolatilityIndexPanelProps) {
+export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, symbols, isLoading = false }: VolatilityIndexPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const selected = VOLATILITY_INDICES.find(v => v.symbol === selectedVolatility) || VOLATILITY_INDICES[3]; // Default to Vol 75
+  const volatilityIndices = extractVolatilityIndices(symbols);
+  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || { symbol: selectedVolatility, label: 'Loading...', display: 'Loading...' };
 
   return (
     <Card className="panel">
@@ -47,8 +52,8 @@ export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, i
           </button>
 
           {isOpen && (
-            <div className="absolute top-full left-0 right-0 mt-2 z-50 border border-primary/25 bg-card rounded-lg shadow-lg overflow-hidden">
-              {VOLATILITY_INDICES.map((vol) => (
+            <div className="absolute top-full left-0 right-0 mt-2 z-50 border border-primary/25 bg-card rounded-lg shadow-lg overflow-y-auto max-h-64">
+              {volatilityIndices.map((vol) => (
                 <button
                   key={vol.symbol}
                   onClick={() => {
@@ -81,11 +86,13 @@ export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, i
 export interface LivePricePanelProps {
   selectedVolatility: string;
   currentTick: Tick | null;
+  symbols: ActiveSymbol[];
   isLoading?: boolean;
 }
 
-export function LivePricePanel({ selectedVolatility, currentTick, isLoading = false }: LivePricePanelProps) {
-  const selected = VOLATILITY_INDICES.find(v => v.symbol === selectedVolatility) || VOLATILITY_INDICES[3];
+export function LivePricePanel({ selectedVolatility, currentTick, symbols, isLoading = false }: LivePricePanelProps) {
+  const volatilityIndices = extractVolatilityIndices(symbols);
+  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || { symbol: selectedVolatility, label: 'Loading...', display: 'Loading...' };
 
   return (
     <Card className="panel">
@@ -175,9 +182,16 @@ export function LiveCursorTrackerPanel({ selectedDigit }: { selectedDigit: numbe
   );
 }
 
-export function DigitPanel({ rangeStart, rangeEnd, currentTick }: { rangeStart: number; rangeEnd: number; currentTick: Tick | null }) {
+export interface DigitPanelProps {
+  rangeStart: number;
+  rangeEnd: number;
+  currentTick: Tick | null;
+  lastDigit: number | null;
+  digitStats: DigitStats;
+}
+
+export function DigitPanel({ rangeStart, rangeEnd, currentTick, lastDigit, digitStats }: DigitPanelProps) {
   const digits = Array.from({ length: rangeEnd - rangeStart + 1 }, (_, i) => rangeStart + i);
-  const samplePercentages = [9.4, 15.6, 3.1, 12.5, 18.8, 9.4, 15.6, 6.3, 3.1, 6.3];
   
   return (
     <Card className="panel">
@@ -188,16 +202,25 @@ export function DigitPanel({ rangeStart, rangeEnd, currentTick }: { rangeStart: 
       </div>
       <div className="p-4">
         <div className="flex items-center justify-center gap-3 mb-6">
-          {digits.map((digit) => (
-            <div key={digit} className="flex flex-col items-center gap-1">
-              <div className={`digit-circle ${digit % 2 === 0 ? 'strong' : 'weak'}`}>
-                {digit}
+          {digits.map((digit) => {
+            const percentage = digitStats.percentages[digit] || 0;
+            const isActive = lastDigit === digit;
+            return (
+              <div key={digit} className="flex flex-col items-center gap-1 relative">
+                {isActive && (
+                  <div className="absolute -top-6 text-xs font-bold text-secondary animate-pulse">
+                    ↓ CURSOR
+                  </div>
+                )}
+                <div className={`digit-circle ${isActive ? 'active' : percentage > 6.4 ? 'strong' : percentage < 6.4 ? 'weak' : 'neutral'} ${isActive ? 'ring-2 ring-secondary ring-offset-2' : ''}`}>
+                  {digit}
+                </div>
+                <span className="text-xs font-bold text-muted-foreground">
+                  {percentage.toFixed(1)}%
+                </span>
               </div>
-              <span className="text-xs font-bold text-muted-foreground">
-                {samplePercentages[digit]}%
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         <div className="grid grid-cols-2 gap-4">

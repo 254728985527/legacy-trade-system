@@ -207,11 +207,13 @@ export function DigitsView({
               <VolatilityIndexPanel 
                 selectedVolatility={selectedVolatility}
                 onSelectVolatility={onSelectVolatility || (() => {})}
+                symbols={symbols}
                 isLoading={isLoading}
               />
               <LivePricePanel 
                 selectedVolatility={selectedVolatility}
                 currentTick={currentTick}
+                symbols={symbols}
                 isLoading={isLoading}
               />
               <IncomingTickPanel 
@@ -226,8 +228,8 @@ export function DigitsView({
             <div className="lg:col-span-8 space-y-4">
               {/* Digit Panels */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <DigitPanel rangeStart={0} rangeEnd={4} currentTick={currentTick} />
-                <DigitPanel rangeStart={5} rangeEnd={9} currentTick={currentTick} />
+                <DigitPanel rangeStart={0} rangeEnd={4} currentTick={currentTick} lastDigit={lastDigit} digitStats={digitStats} />
+                <DigitPanel rangeStart={5} rangeEnd={9} currentTick={currentTick} lastDigit={lastDigit} digitStats={digitStats} />
               </div>
 
               {/* AI Engine Workflow */}
