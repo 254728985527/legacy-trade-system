@@ -6,9 +6,29 @@ import type { Tick } from '../lib/types';
 import type { ActiveSymbol } from '../lib/types';
 import type { DigitStats } from '../lib/types';
 
+// Fallback volatility indices from Deriv
+const FALLBACK_VOLATILITY_INDICES = [
+  { symbol: '1HZ10V', label: 'Volatility 10', display: 'Volatility 10 Index' },
+  { symbol: '1HZ25V', label: 'Volatility 25', display: 'Volatility 25 Index' },
+  { symbol: '1HZ50V', label: 'Volatility 50', display: 'Volatility 50 Index' },
+  { symbol: '1HZ75V', label: 'Volatility 75', display: 'Volatility 75 Index' },
+  { symbol: '1HZ100V', label: 'Volatility 100', display: 'Volatility 100 Index' },
+  { symbol: '1HZ150V', label: 'Volatility 150', display: 'Volatility 150 Index' },
+  { symbol: '1HZ200V', label: 'Volatility 200', display: 'Volatility 200 Index' },
+  { symbol: '1HZ250V', label: 'Volatility 250', display: 'Volatility 250 Index' },
+  { symbol: '1HZ300V', label: 'Volatility 300', display: 'Volatility 300 Index' },
+  { symbol: '1HZ10IV', label: 'Volatility 10 Index', display: 'Volatility 10 Index' },
+  { symbol: '1HZ25IV', label: 'Volatility 25 Index', display: 'Volatility 25 Index' },
+  { symbol: '1HZ50IV', label: 'Volatility 50 Index', display: 'Volatility 50 Index' },
+  { symbol: '1HZ75IV', label: 'Volatility 75 Index', display: 'Volatility 75 Index' },
+  { symbol: '1HZ100IV', label: 'Volatility 100 Index', display: 'Volatility 100 Index' },
+  { symbol: '1HZ150IV', label: 'Volatility 150 Index', display: 'Volatility 150 Index' },
+  { symbol: '1HZ200IV', label: 'Volatility 200 Index', display: 'Volatility 200 Index' },
+];
+
 // Helper to extract all volatility indices from Deriv symbols
 function extractVolatilityIndices(symbols: ActiveSymbol[]): Array<{ symbol: string; label: string; display: string }> {
-  return symbols
+  const fromSymbols = symbols
     .filter(s => s.submarket === 'volidx')
     .sort((a, b) => {
       const aNum = parseInt(a.underlying_symbol?.match(/\d+/)?.[0] || '0');
@@ -20,6 +40,9 @@ function extractVolatilityIndices(symbols: ActiveSymbol[]): Array<{ symbol: stri
       label: s.underlying_symbol_name || s.underlying_symbol || '',
       display: s.underlying_symbol_name || s.underlying_symbol || '',
     }));
+  
+  // Use real symbols if available, otherwise fallback to predefined list
+  return fromSymbols.length > 0 ? fromSymbols : FALLBACK_VOLATILITY_INDICES;
 }
 
 export interface VolatilityIndexPanelProps {
@@ -32,7 +55,7 @@ export interface VolatilityIndexPanelProps {
 export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, symbols, isLoading = false }: VolatilityIndexPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const volatilityIndices = extractVolatilityIndices(symbols);
-  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || { symbol: selectedVolatility, label: 'Loading...', display: 'Loading...' };
+  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || FALLBACK_VOLATILITY_INDICES[3];
 
   return (
     <Card className="panel">
@@ -92,7 +115,7 @@ export interface LivePricePanelProps {
 
 export function LivePricePanel({ selectedVolatility, currentTick, symbols, isLoading = false }: LivePricePanelProps) {
   const volatilityIndices = extractVolatilityIndices(symbols);
-  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || { symbol: selectedVolatility, label: 'Loading...', display: 'Loading...' };
+  const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || FALLBACK_VOLATILITY_INDICES[3];
 
   return (
     <Card className="panel">
