@@ -49,10 +49,11 @@ export interface VolatilityIndexPanelProps {
   selectedVolatility: string;
   onSelectVolatility: (symbol: string) => void;
   symbols: ActiveSymbol[];
+  currentTick: Tick | null;
   isLoading?: boolean;
 }
 
-export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, symbols, isLoading = false }: VolatilityIndexPanelProps) {
+export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, symbols, currentTick, isLoading = false }: VolatilityIndexPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const volatilityIndices = extractVolatilityIndices(symbols);
   const selected = volatilityIndices.find(v => v.symbol === selectedVolatility) || volatilityIndices[0] || FALLBACK_VOLATILITY_INDICES[3];
@@ -63,15 +64,15 @@ export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, s
         <span className="text-primary">📈</span>
         <span className="panel-header-title">VOLATILITY INDEX</span>
       </div>
-      <div className="p-4">
+      <div className="p-4 space-y-4">
         <div className="relative">
           <button
             onClick={() => setIsOpen(!isOpen)}
             disabled={isLoading}
-            className="w-full flex items-center justify-between p-3 rounded-lg border border-primary/25 bg-card hover:border-primary/40 hover:bg-card/80 transition-all"
+            className="w-full flex items-center justify-between p-3 rounded-lg border border-primary/25 bg-card/50 hover:border-primary/40 hover:bg-card/80 transition-all"
           >
-            <span className="text-sm font-semibold text-foreground">{selected.label}</span>
-            <span className={`text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+            <span className="text-base font-bold text-foreground">{selected.label}</span>
+            <span className={`text-primary text-lg transition-transform ${isOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
           {isOpen && (
@@ -96,10 +97,21 @@ export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, s
           )}
         </div>
         
-        <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
-          <div className="text-xs text-muted-foreground">INDEX PRICE</div>
-          <div className="text-2xl font-bold text-primary mt-1">—</div>
-          <div className="text-xs text-muted-foreground mt-1 uppercase">{selected.display}</div>
+        {/* INDEX PRICE Section with Gold Bar */}
+        <div>
+          <div className="text-xs text-muted-foreground mb-2 tracking-wider">INDEX PRICE</div>
+          {/* Gold bar separator */}
+          <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/40 rounded-full mb-3"></div>
+          
+          {currentTick?.ask ? (
+            <div className="text-2xl font-black text-primary">
+              {currentTick.ask.toFixed(2)}
+            </div>
+          ) : (
+            <div className="text-2xl font-black text-primary/50">—</div>
+          )}
+          
+          <div className="text-xs text-muted-foreground uppercase tracking-wider mt-2">{selected.display}</div>
         </div>
       </div>
     </Card>
@@ -123,21 +135,29 @@ export function LivePricePanel({ selectedVolatility, currentTick, symbols, isLoa
         <span className="text-primary">📊</span>
         <span className="panel-header-title">LIVE PRICE</span>
       </div>
-      <div className="p-4">
+      <div className="p-6 space-y-4">
         {isLoading ? (
-          <div className="text-center py-4">
+          <div className="text-center py-8">
             <div className="text-sm text-muted-foreground">Loading...</div>
           </div>
         ) : currentTick?.ask ? (
           <>
-            <div className="price-large">
-              <span>{currentTick.ask.toFixed(2)}</span>
-              <span className="price-symbol"> {selected.display}</span>
+            <div className="text-center">
+              <div className="price-large text-white">
+                {currentTick.ask.toFixed(2)}
+              </div>
             </div>
-            <div className="index-label mt-2">{selected.label.toUpperCase()}</div>
+            <div className="text-center space-y-1">
+              <div className="text-primary font-black text-lg">
+                {selected.label}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                {selected.label}
+              </div>
+            </div>
           </>
         ) : (
-          <div className="text-center py-6">
+          <div className="text-center py-8">
             <div className="text-sm text-muted-foreground">Select a volatility index</div>
           </div>
         )}

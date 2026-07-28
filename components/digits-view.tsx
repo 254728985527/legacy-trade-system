@@ -208,6 +208,7 @@ export function DigitsView({
                 selectedVolatility={selectedVolatility}
                 onSelectVolatility={onSelectVolatility || (() => {})}
                 symbols={symbols}
+                currentTick={currentTick}
                 isLoading={isLoading}
               />
               <LivePricePanel 
