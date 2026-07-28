@@ -1,11 +1,34 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import type { Tick } from '../lib/types';
 import type { ActiveSymbol } from '../lib/types';
 import type { DigitStats } from '../lib/types';
 
-export function VolatilityIndexPanel() {
+// Volatility indices available (1s resolution)
+const VOLATILITY_INDICES = [
+  { symbol: '1HZ10V', label: 'Vol 10 (1s)', display: 'Volatility 10' },
+  { symbol: '1HZ25V', label: 'Vol 25 (1s)', display: 'Volatility 25' },
+  { symbol: '1HZ50V', label: 'Vol 50 (1s)', display: 'Volatility 50' },
+  { symbol: '1HZ75V', label: 'Vol 75 (1s)', display: 'Volatility 75' },
+  { symbol: '1HZ100V', label: 'Vol 100 (1s)', display: 'Volatility 100' },
+  { symbol: '1HZ150V', label: 'Vol 150 (1s)', display: 'Volatility 150' },
+  { symbol: '1HZ200V', label: 'Vol 200 (1s)', display: 'Volatility 200' },
+  { symbol: '1HZ250V', label: 'Vol 250 (1s)', display: 'Volatility 250' },
+  { symbol: '1HZ300V', label: 'Vol 300 (1s)', display: 'Volatility 300' },
+];
+
+export interface VolatilityIndexPanelProps {
+  selectedVolatility: string;
+  onSelectVolatility: (symbol: string) => void;
+  isLoading?: boolean;
+}
+
+export function VolatilityIndexPanel({ selectedVolatility, onSelectVolatility, isLoading = false }: VolatilityIndexPanelProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selected = VOLATILITY_INDICES.find(v => v.symbol === selectedVolatility) || VOLATILITY_INDICES[3]; // Default to Vol 75
+
   return (
     <Card className="panel">
       <div className="panel-header">
@@ -13,18 +36,57 @@ export function VolatilityIndexPanel() {
         <span className="panel-header-title">VOLATILITY INDEX</span>
       </div>
       <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-muted-foreground">Vol 75 (1s) Index</span>
-          <span className="text-sm text-primary">▼</span>
+        <div className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            disabled={isLoading}
+            className="w-full flex items-center justify-between p-3 rounded-lg border border-primary/25 bg-card hover:border-primary/40 hover:bg-card/80 transition-all"
+          >
+            <span className="text-sm font-semibold text-foreground">{selected.label}</span>
+            <span className={`text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+          </button>
+
+          {isOpen && (
+            <div className="absolute top-full left-0 right-0 mt-2 z-50 border border-primary/25 bg-card rounded-lg shadow-lg overflow-hidden">
+              {VOLATILITY_INDICES.map((vol) => (
+                <button
+                  key={vol.symbol}
+                  onClick={() => {
+                    onSelectVolatility(vol.symbol);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm transition-all ${
+                    selectedVolatility === vol.symbol
+                      ? 'bg-primary/20 text-primary font-semibold'
+                      : 'text-foreground hover:bg-primary/10'
+                  }`}
+                >
+                  {vol.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="text-3xl font-bold text-foreground">6924.61</div>
-        <div className="text-xs text-muted-foreground mt-2">VOL 75 (1S) INDEX</div>
+        
+        <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="text-xs text-muted-foreground">INDEX PRICE</div>
+          <div className="text-2xl font-bold text-primary mt-1">—</div>
+          <div className="text-xs text-muted-foreground mt-1 uppercase">{selected.display}</div>
+        </div>
       </div>
     </Card>
   );
 }
 
-export function LivePricePanel({ currentTick, activeSymbol }: { currentTick: Tick | null; activeSymbol: ActiveSymbol | null }) {
+export interface LivePricePanelProps {
+  selectedVolatility: string;
+  currentTick: Tick | null;
+  isLoading?: boolean;
+}
+
+export function LivePricePanel({ selectedVolatility, currentTick, isLoading = false }: LivePricePanelProps) {
+  const selected = VOLATILITY_INDICES.find(v => v.symbol === selectedVolatility) || VOLATILITY_INDICES[3];
+
   return (
     <Card className="panel">
       <div className="panel-header">
@@ -32,23 +94,37 @@ export function LivePricePanel({ currentTick, activeSymbol }: { currentTick: Tic
         <span className="panel-header-title">LIVE PRICE</span>
       </div>
       <div className="p-4">
-        <div className="price-large">
-          {currentTick?.ask ? (
-            <>
+        {isLoading ? (
+          <div className="text-center py-4">
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          </div>
+        ) : currentTick?.ask ? (
+          <>
+            <div className="price-large">
               <span>{currentTick.ask.toFixed(2)}</span>
-              <span className="price-symbol"> Vol 75</span>
-            </>
-          ) : (
-            'N/A'
-          )}
-        </div>
-        <div className="index-label mt-2">VOL 75 (1S)</div>
+              <span className="price-symbol"> {selected.display}</span>
+            </div>
+            <div className="index-label mt-2">{selected.label.toUpperCase()}</div>
+          </>
+        ) : (
+          <div className="text-center py-6">
+            <div className="text-sm text-muted-foreground">Select a volatility index</div>
+          </div>
+        )}
       </div>
     </Card>
   );
 }
 
-export function IncomingTickPanel({ lastDigit }: { lastDigit: number | null }) {
+export interface IncomingTickPanelProps {
+  lastDigit: number | null;
+  tickCount: number;
+  totalTicks: number;
+}
+
+export function IncomingTickPanel({ lastDigit, tickCount = 0, totalTicks = 1000 }: IncomingTickPanelProps) {
+  const progress = (tickCount / totalTicks) * 100;
+
   return (
     <Card className="panel">
       <div className="panel-header">
@@ -60,9 +136,9 @@ export function IncomingTickPanel({ lastDigit }: { lastDigit: number | null }) {
           <div className="incoming-tick-stars">⭐⭐⭐⭐⭐</div>
           <div className="incoming-tick-number">{lastDigit ?? '-'}</div>
         </div>
-        <div className="text-xs text-muted-foreground mt-4">TICKS: 32/1000</div>
+        <div className="text-xs text-muted-foreground mt-4">TICKS: {tickCount}/{totalTicks}</div>
         <div className="w-full bg-muted rounded-full h-1 mt-2">
-          <div className="bg-primary h-full rounded-full" style={{ width: '3.2%' }}></div>
+          <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${progress}%` }}></div>
         </div>
       </div>
     </Card>

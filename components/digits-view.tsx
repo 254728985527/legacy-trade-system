@@ -63,6 +63,10 @@ export interface DigitsViewProps {
   lastDigit: number | null;
   digitStats: DigitStats;
   pipSize: number;
+  selectedVolatility?: string;
+  onSelectVolatility?: (symbol: string) => void;
+  tickCount?: number;
+  totalTicks?: number;
 
   // Trade controls
   tradeType: TradeType;
@@ -106,6 +110,10 @@ export function DigitsView({
   lastDigit,
   digitStats,
   pipSize,
+  selectedVolatility = '1HZ75V',
+  onSelectVolatility,
+  tickCount = 0,
+  totalTicks = 1000,
   tradeType,
   setTradeType,
   contractMode,
@@ -196,9 +204,21 @@ export function DigitsView({
           <div className="p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Left Sidebar */}
             <div className="lg:col-span-2 space-y-4">
-              <VolatilityIndexPanel />
-              <LivePricePanel currentTick={currentTick} activeSymbol={activeSymbol} />
-              <IncomingTickPanel lastDigit={lastDigit} />
+              <VolatilityIndexPanel 
+                selectedVolatility={selectedVolatility}
+                onSelectVolatility={onSelectVolatility || (() => {})}
+                isLoading={isLoading}
+              />
+              <LivePricePanel 
+                selectedVolatility={selectedVolatility}
+                currentTick={currentTick}
+                isLoading={isLoading}
+              />
+              <IncomingTickPanel 
+                lastDigit={lastDigit}
+                tickCount={tickCount}
+                totalTicks={totalTicks}
+              />
               <LiveCursorTrackerPanel selectedDigit={selectedDigit} />
             </div>
 
