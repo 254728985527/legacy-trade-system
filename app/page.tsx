@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDigitsTrading } from '../hooks/use-digits-trading';
 import { useDerivWSContext } from '@/components/custom/deriv-ws-provider';
 import { useLogoSrc } from '@/components/custom/logo-src-provider';
@@ -10,10 +10,28 @@ export default function DigitsPage() {
   const logoSrc = useLogoSrc();
   const { ws, isConnected, isExhausted, auth } = useDerivWSContext();
   const { authState, accounts, activeAccount, login, signUp, logout, switchAccount } = auth;
-  const [selectedVolatility, setSelectedVolatility] = useState('1HZ75V');
+  const [selectedVolatility, setSelectedVolatilityRaw] = useState('1HZ75V');
   const [tickCount, setTickCount] = useState(0);
 
   const trading = useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated: !!auth.wsUrl, onAuthWSFailed: logout });
+
+  // When volatility index is selected, update the active symbol to get correct price data
+  const setSelectedVolatility = (symbol: string) => {
+    setSelectedVolatilityRaw(symbol);
+    trading.selectSymbol(symbol);
+  };
+
+  // Initialize with default volatility on mount
+  useEffect(() => {
+    trading.selectSymbol('1HZ75V');
+  }, []); // Only run once on mount
+
+  // Sync selectedVolatility with activeSymbol when it changes
+  useEffect(() => {
+    if (trading.activeSymbol?.underlying_symbol) {
+      setSelectedVolatilityRaw(trading.activeSymbol.underlying_symbol);
+    }
+  }, [trading.activeSymbol?.underlying_symbol]);
 
   return (
     <DigitsView
