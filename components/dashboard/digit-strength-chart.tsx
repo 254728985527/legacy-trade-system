@@ -1,31 +1,22 @@
-const digitData = [
-  { digit: 0, percentage: 9.4, strength: 'neutral' },
-  { digit: 1, percentage: 15.6, strength: 'strong' },
-  { digit: 2, percentage: 3.1, strength: 'weak' },
-  { digit: 3, percentage: 12.5, strength: 'neutral' },
-  { digit: 4, percentage: 18.8, strength: 'strong' },
-  { digit: 5, percentage: 9.4, strength: 'neutral' },
-  { digit: 6, percentage: 15.6, strength: 'strong' },
-  { digit: 7, percentage: 6.3, strength: 'weak' },
-  { digit: 8, percentage: 3.1, strength: 'weak' },
-  { digit: 9, percentage: 6.3, strength: 'weak' },
-];
+import type { DigitStats } from '@/lib/types';
 
-function getBarColor(strength: string): string {
-  switch (strength) {
-    case 'strong':
-      return 'bg-[rgb(34,197,94)]';
-    case 'weak':
-      return 'bg-[rgb(239,68,68)]';
-    case 'neutral':
-      return 'bg-[rgb(212,175,55)]';
-    default:
-      return 'bg-gray-600';
-  }
+interface DigitStrengthChartProps {
+  digitStats: DigitStats;
 }
 
-export function DigitStrengthChart() {
-  const maxPercentage = Math.max(...digitData.map((d) => d.percentage));
+function getBarColor(percentage: number): string {
+  if (percentage > 6.4) return 'bg-[rgb(34,197,94)]'; // Strong - Green
+  if (Math.abs(percentage - 6.4) < 0.01) return 'bg-[rgb(212,175,55)]'; // Neutral - Gold
+  return 'bg-[rgb(239,68,68)]'; // Weak - Red
+}
+
+export function DigitStrengthChart({ digitStats }: DigitStrengthChartProps) {
+  const digitData = Array.from({ length: 10 }, (_, i) => ({
+    digit: i,
+    percentage: Math.round((digitStats.percentages[i] ?? 0) * 10) / 10,
+  }));
+
+  const maxPercentage = Math.max(...digitData.map((d) => d.percentage), 1);
 
   return (
     <div className="p-6 border border-[rgb(212,175,55)] border-opacity-40 rounded-lg bg-[rgb(15,20,45)]">
@@ -41,7 +32,7 @@ export function DigitStrengthChart() {
             <div key={data.digit} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex items-end justify-center h-full">
                 <div
-                  className={`w-full ${getBarColor(data.strength)} rounded-t transition hover:opacity-80`}
+                  className={`w-full ${getBarColor(data.percentage)} rounded-t transition hover:opacity-80`}
                   style={{ height: `${heightPercent}%` }}
                 ></div>
               </div>
