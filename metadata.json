@@ -1,0 +1,6 @@
+{
+  "name": "Deriv Last Digit Prediction & Live Tick Analysis",
+  "description": "Real-time Deriv website WebSocket connection streaming live ticks, prices, digit distribution, AI trade signals, and over/under predictions for Volatility Indices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

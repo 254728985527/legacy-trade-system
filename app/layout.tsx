@@ -1,37 +1,49 @@
-import type { Metadata } from 'next';
-import { buildFaviconUri } from '@/lib/build-favicon-uri';
-import { getLogoSrc } from '@/lib/get-logo-src';
-import { inter, FONT_CLASS_MAP } from '@/lib/fonts';
-import { TemplateLayout } from '@/components/custom/template-layout';
-import { LogoSrcProvider } from '@/components/custom/logo-src-provider';
-import '@/app/globals.css';
-import './globals.css';
-import './custom.css';
+import { Analytics } from '@vercel/analytics/next'
+import type { Metadata, Viewport } from 'next'
+import './globals.css'
 
-export function generateMetadata(): Metadata {
-  const faviconUri = buildFaviconUri();
-  return {
-    title: 'Deriv Digits Trading App',
-    description: 'A white-label trading application powered by Deriv',
-    ...(faviconUri ? { icons: { icon: faviconUri } } : {}),
-  };
+export const metadata: Metadata = {
+  title: 'Deriv Last Digit Prediction & Live Tick Analysis',
+  description: 'Real-time Deriv WebSocket connection with live ticks, prices, digit distribution, AI trade signals, and over/under predictions for Volatility Indices',
+  generator: 'v0.app',
+  icons: {
+    icon: [
+      {
+        url: '/icon-light-32x32.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    apple: '/apple-icon.png',
+  },
 }
 
-const fontClass =
-  FONT_CLASS_MAP[process.env.NEXT_PUBLIC_FONT_FAMILY ?? 'Inter'] ??
-  inter.className;
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' },
+  ],
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const logoSrc = getLogoSrc();
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="en" className="h-full lg:h-auto" suppressHydrationWarning>
-      <body
-        className={`${fontClass} bg-background flex min-h-dvh flex-col overflow-hidden max-lg:h-dvh max-lg:overflow-hidden lg:block lg:h-auto lg:min-h-screen lg:overflow-x-hidden lg:overflow-y-auto`}
-      >
-        <TemplateLayout>
-          <LogoSrcProvider logoSrc={logoSrc}>{children}</LogoSrcProvider>
-        </TemplateLayout>
+    <html lang="en">
+      <body className="antialiased">
+        {children}
+        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
-  );
+  )
 }

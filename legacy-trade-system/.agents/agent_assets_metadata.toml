@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "8rv57YQGvkHdY3MInjA4S"
+uri = "file://artifacts/trading-app-mobile/assets/images/icon.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "lnxdY_20WmVBBuJqiFc2G"
+uri = "file://artifacts/pitch-deck/public/hero-bg.png"
+type = "image"
+title = "dark fintech hero background"
+
+[[generated]]
+id = "m0cZLu46yNvCG9vTzAZa-"
+uri = "file://artifacts/pitch-deck/public/digits-bg.png"
+type = "image"
+title = "digits floating background"

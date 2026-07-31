@@ -1,0 +1,2 @@
+- [Deriv OAuth redirect URI](deriv-oauth-redirect.md) — VITE_DERIV_REDIRECT_URI must NOT be set to any hardcoded domain; delete it so code falls back to window.location.origin
+- [ClosedPosition field names](closed-position-fields.md) — no .profit/.underlying/.entry_spot/.exit_spot; use sell_price-buy_price for P/L and underlying_symbol
