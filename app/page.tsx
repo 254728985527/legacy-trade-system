@@ -96,6 +96,10 @@ export default function DigitsPage() {
         setStake: trading.setStake,
         durationValue: trading.duration,
         setDurationValue: trading.setDuration,
+        digitStats: trading.digitStats,
+        selectedDigit: trading.selectedDigit,
+        setSelectedDigit: trading.setSelectedDigit,
+        lastDigit: trading.lastDigit,
       }}
     />
   );
