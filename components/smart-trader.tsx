@@ -19,11 +19,14 @@ interface SmartTraderProps {
   symbols: ActiveSymbol[]; activeSymbol: ActiveSymbol | null; currentTick: Tick | null; isConnected: boolean;
   activeAccount: DerivAccount | null; selectSymbol: (symbol: string) => void; onRun: () => Promise<void>;
   isBuying: boolean; buyError: string | null;
+  tradeType: import('@/lib/types').TradeType; setTradeType: (type: import('@/lib/types').TradeType) => void;
+  contractMode: import('@/lib/types').ContractMode; setContractMode: (mode: import('@/lib/types').ContractMode) => void;
+  stake: string; setStake: (value: string) => void; durationValue: number; setDurationValue: (value: number) => void;
 }
 
-export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError }: SmartTraderProps) {
+export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError, setTradeType: setEngineTradeType }: SmartTraderProps) {
   const [marketOpen, setMarketOpen] = useState(false);
-  const [tradeType, setTradeType] = useState('Rise/Fall');
+  const [tradeTypeLabel, setTradeTypeLabel] = useState('Rise/Fall');
   const [stakeOne, setStakeOne] = useState('10');
   const [stakeTwo, setStakeTwo] = useState('10');
   const [duration, setDuration] = useState('1');
@@ -42,9 +45,15 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const livePrice = currentTick?.ask ?? currentTick?.quote;
   const balance = activeAccount ? `${Number(activeAccount.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${activeAccount.currency}` : 'Connect account';
   const payout = (Number(stakeOne || 0) * 1.923).toFixed(2);
+  const tradeType = tradeTypeLabel;
   const isOverUnder = tradeType === 'Over/Under';
-  const showRise = tradeType === 'Rise/Fall' || tradeType === 'Hedging Trade' || tradeType === 'Only Up';
-  const showFall = tradeType === 'Rise/Fall' || tradeType === 'Hedging Trade' || tradeType === 'Only Down';
+  const handleTradeType = (label: string) => {
+    setTradeTypeLabel(label);
+    const map = { 'Only Up': 'only-up', 'Only Down': 'only-down', 'Up + Down Hedging': 'up-down-hedging', 'Rise/Fall': 'only-up', 'Over/Under': 'over-under', 'Digit Over': 'over-under', 'Digit Under': 'over-under', 'Matches/Differs': 'matches-differs' } as const;
+    setEngineTradeType(map[label as keyof typeof map] || 'only-up');
+  };
+  const showRise = tradeType === 'Only Up' || tradeType === 'Up + Down Hedging';
+  const showFall = tradeType === 'Only Down' || tradeType === 'Up + Down Hedging';
 
   return (
     <section className="min-h-dvh bg-slate-100 px-3 pb-8 pt-4 text-slate-800 sm:px-6 lg:pl-10 lg:pr-10">
@@ -61,7 +70,7 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
               <Selector label="Market" value={selectedMarket.label} open={marketOpen} onClick={() => setMarketOpen(v => !v)}>
                 {marketOpen && <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">{markets.map(m => <button key={m.symbol} type="button" onClick={() => { selectSymbol(m.symbol); setMarketOpen(false); }} className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50">{m.label}</button>)}</div>}
               </Selector>
-              <label className="rounded-xl bg-white px-5 py-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs text-slate-500">Trade types</span><span className="relative mt-1 flex items-center"><select value={tradeType} onChange={e => setTradeType(e.target.value)} className="w-full appearance-none bg-transparent text-lg font-medium outline-none"><option>Rise/Fall</option><option>Hedging Trade</option><option>Only Up</option><option>Only Down</option><option>Over/Under</option><option>Digit Over</option><option>Digit Under</option><option>Matches/Differs</option></select><ChevronDown className="pointer-events-none absolute right-0 size-5" /></span></label>
+              <label className="rounded-xl bg-white px-5 py-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs text-slate-500">Trade types</span><span className="relative mt-1 flex items-center"><select value={tradeType} onChange={e => handleTradeType(e.target.value)} className="w-full appearance-none bg-transparent text-lg font-medium outline-none"><option>Only Up</option><option>Only Down</option><option>Up + Down Hedging</option><option>Over/Under</option><option>Digit Over</option><option>Digit Under</option><option>Matches/Differs</option></select><ChevronDown className="pointer-events-none absolute right-0 size-5" /></span></label>
             </div>
             <div className="flex items-center justify-between gap-5 xl:justify-end"><div className="flex flex-col items-center"><span className="text-xs text-slate-500">Live price</span><strong className="rounded-md bg-emerald-500 px-2 py-1 text-lg text-white">{livePrice ? Number(livePrice).toFixed(2) : '—'}</strong></div><div><p className="text-sm text-orange-500">{activeAccount ? `${activeAccount.account_type === 'demo' ? 'Demo' : 'Real'} account` : 'Account'}</p><p className="text-xl font-bold">{balance}</p></div><Button className="bg-rose-500 text-white hover:bg-rose-600">Deposit</Button></div>
           </div>

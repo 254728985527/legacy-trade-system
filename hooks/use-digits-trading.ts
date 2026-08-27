@@ -18,7 +18,7 @@ import type { UseBaseTradingParams } from '@/hooks/use-base-trading';
 import { computeDigitStats, getLastDigit } from '../lib/digit-stats';
 import type { ContractMode, TradeType, DigitStats, OpenPosition, ClosedPosition } from '../lib/types';
 
-const CONTRACT_TYPES = ['DIGITMATCH', 'DIGITDIFF', 'DIGITOVER', 'DIGITUNDER', 'DIGITEVEN', 'DIGITODD'];
+const CONTRACT_TYPES = ['CALL', 'PUT', 'DIGITMATCH', 'DIGITDIFF', 'DIGITOVER', 'DIGITUNDER', 'DIGITEVEN', 'DIGITODD'];
 
 interface UseDigitsTradingReturn {
   isConnected: boolean;
@@ -104,6 +104,15 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
       case 'even-odd':
         setContractMode('DIGITEVEN');
         break;
+      case 'only-up':
+        setContractMode('CALL');
+        break;
+      case 'only-down':
+        setContractMode('PUT');
+        break;
+      case 'up-down-hedging':
+        setContractMode('CALL');
+        break;
     }
   }, []);
 
@@ -138,7 +147,7 @@ export function useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated
     const stakeNum = parseFloat(stake);
     if (!stakeNum || stakeNum <= 0) return null;
 
-    const needsBarrier = contractMode !== 'DIGITEVEN' && contractMode !== 'DIGITODD';
+    const needsBarrier = !['CALL', 'PUT', 'DIGITEVEN', 'DIGITODD'].includes(contractMode);
 
     return {
       contractType: contractMode,

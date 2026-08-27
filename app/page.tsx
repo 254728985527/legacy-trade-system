@@ -88,6 +88,14 @@ export default function DigitsPage() {
         onRun: trading.buyContract,
         isBuying: trading.isBuying,
         buyError: trading.buyError,
+        tradeType: trading.tradeType,
+        setTradeType: trading.setTradeType,
+        contractMode: trading.contractMode,
+        setContractMode: trading.setContractMode,
+        stake: trading.stake,
+        setStake: trading.setStake,
+        durationValue: trading.duration,
+        setDurationValue: trading.setDuration,
       }}
     />
   );

@@ -38,6 +38,9 @@ interface TradeControlsProps {
 }
 
 const CONTRACT_MODE_OPTIONS: Record<TradeType, { value: ContractMode; label: string }[]> = {
+  'only-up': [{ value: 'CALL', label: 'Rise / Up' }],
+  'only-down': [{ value: 'PUT', label: 'Fall / Down' }],
+  'up-down-hedging': [{ value: 'CALL', label: 'Rise / Up' }, { value: 'PUT', label: 'Fall / Down' }],
   'matches-differs': [
     { value: 'DIGITMATCH', label: 'Matches' },
     { value: 'DIGITDIFF', label: 'Differs' },
@@ -54,6 +57,10 @@ const CONTRACT_MODE_OPTIONS: Record<TradeType, { value: ContractMode; label: str
 
 function getPredictionText(contractMode: ContractMode): string {
   switch (contractMode) {
+    case 'CALL':
+      return 'rise';
+    case 'PUT':
+      return 'fall';
     case 'DIGITMATCH':
       return 'match';
     case 'DIGITDIFF':
@@ -70,7 +77,7 @@ function getPredictionText(contractMode: ContractMode): string {
 }
 
 function showDigitInPrediction(contractMode: ContractMode): boolean {
-  return contractMode !== 'DIGITEVEN' && contractMode !== 'DIGITODD';
+  return !['CALL', 'PUT', 'DIGITEVEN', 'DIGITODD'].includes(contractMode);
 }
 
 export function TradeControls({

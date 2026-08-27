@@ -20,6 +20,8 @@ export type { PositionFilter } from '@/components/custom/positions-table';
 // Digit-specific types
 
 export type ContractMode =
+  | 'CALL'
+  | 'PUT'
   | 'DIGITMATCH'
   | 'DIGITDIFF'
   | 'DIGITOVER'
@@ -27,7 +29,13 @@ export type ContractMode =
   | 'DIGITEVEN'
   | 'DIGITODD';
 
-export type TradeType = 'matches-differs' | 'over-under' | 'even-odd';
+export type TradeType =
+  | 'matches-differs'
+  | 'over-under'
+  | 'even-odd'
+  | 'only-up'
+  | 'only-down'
+  | 'up-down-hedging';
 
 export interface DigitStats {
   /** Count of each digit 0-9 from tick history */
