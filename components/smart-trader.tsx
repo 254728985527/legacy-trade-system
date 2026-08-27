@@ -49,8 +49,9 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const livePrice = currentTick?.ask ?? currentTick?.quote;
   const balance = activeAccount ? `${Number(activeAccount.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${activeAccount.currency}` : 'Connect account';
   const payout = (Number(stakeOne || 0) * 1.923).toFixed(2);
-  const showRise = tradeType !== 'Only Down';
-  const showFall = tradeType !== 'Only Up';
+  const isHedgingTrade = tradeType === 'Hedging Trade';
+  const showRise = tradeType === 'Rise/Fall' || isHedgingTrade;
+  const showFall = tradeType === 'Rise/Fall' || isHedgingTrade;
 
   return (
     <section className="min-h-dvh bg-slate-50 text-slate-900 px-4 pb-10 pt-5 sm:px-8 lg:px-12">
@@ -84,7 +85,7 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
                   {markets.map(market => <button type="button" key={market.symbol} onClick={() => { selectSymbol(market.symbol); setMarketOpen(false); }} className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50">{market.label}</button>)}
                 </div>}
               </div>
-              <label className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs font-semibold text-slate-500">Trade types</span><select value={tradeType} onChange={event => setTradeType(event.target.value)} className="mt-1 block w-full bg-transparent text-base font-semibold outline-none"><option>Rise/Fall</option><option>Only Up</option><option>Only Down</option><option>Over/Under</option><option>Matches/Differs</option></select></label>
+              <label className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs font-semibold text-slate-500">Trade types</span><select value={tradeType} onChange={event => setTradeType(event.target.value)} className="mt-1 block w-full bg-transparent text-base font-semibold outline-none"><option>Rise/Fall</option><option>Hedging Trade</option><option>Over/Under</option><option>Matches/Differs</option></select></label>
             </div>
 
             <div className={`grid gap-4 ${showRise && showFall ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
@@ -122,7 +123,7 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
 
 function TradeCard({ tone, title, arrow, stake, payout, onStakeChange, onBuy, disabled }: { tone: 'emerald' | 'rose'; title: string; arrow: string; stake: string; payout: string; onStakeChange: (value: string) => void; onBuy: () => Promise<void>; disabled: boolean }) {
   const isEmerald = tone === 'emerald';
-  return <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardContent className="p-5"><div className="flex items-center justify-between"><span className={isEmerald ? 'text-3xl text-emerald-500' : 'text-3xl text-rose-500'}>{arrow}</span><div className="grid grid-cols-2 gap-8 text-center"><div><p className="text-xs text-slate-500">Stake:</p><p className="font-bold">{Number(stake || 0).toFixed(2)} USD</p></div><div><p className="text-xs text-slate-500">Payout:</p><p className="font-bold">{payout} USD</p></div></div></div><p className="mt-4 font-semibold">{title}</p><Button onClick={() => void onBuy()} disabled={disabled} className={`mt-2 w-full ${isEmerald ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white`}>{disabled ? 'Connecting…' : 'Purchase'}</Button><p className="mt-3 text-center text-xs text-slate-500">Net profit: {(Number(payout) - Number(stake || 0)).toFixed(2)} USD | Return 92.3%</p></CardContent></Card>;
+  return <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardContent className="p-5"><div className="flex items-center justify-between"><span className={isEmerald ? 'text-3xl text-emerald-500' : 'text-3xl text-rose-500'}>{arrow}</span><div className="grid grid-cols-2 gap-8 text-center"><div><p className="text-xs text-slate-500">Stake:</p><p className="font-bold">{Number(stake || 0).toFixed(2)} USD</p></div><div><p className="text-xs text-slate-500">Payout:</p><p className="font-bold">{payout} USD</p></div></div></div><p className="mt-4 font-semibold">{title} <span className="text-xs font-normal text-slate-500">· separate stake</span></p><label className="mt-3 block text-xs font-semibold text-slate-500">Stake amount<Input aria-label={`${title} stake`} value={stake} onChange={event => onStakeChange(event.target.value)} inputMode="decimal" className="mt-1 h-9" /></label><Button onClick={() => void onBuy()} disabled={disabled} className={`mt-2 w-full ${isEmerald ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white`}>{disabled ? 'Connecting…' : 'Purchase'}</Button><p className="mt-3 text-center text-xs text-slate-500">Net profit: {(Number(payout) - Number(stake || 0)).toFixed(2)} USD | Return 92.3%</p></CardContent></Card>;
 }
 
 function DigitSelect({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
