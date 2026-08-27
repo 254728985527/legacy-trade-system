@@ -10,6 +10,7 @@ import { TradeControls } from './trade-controls';
 import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
+import { SmartTrader } from './smart-trader';
 import {
   VolatilityIndexPanel,
   LivePricePanel,
@@ -90,6 +91,9 @@ export interface DigitsViewProps {
   // Branding (used by preview route; no-op in the real app)
   logoSrc?: string;
   appName?: string;
+  activeTab?: 'deriv' | 'smart';
+  onTabChange?: (tab: 'deriv' | 'smart') => void;
+  smartTraderProps?: React.ComponentProps<typeof SmartTrader>;
 }
 
 export function DigitsView({
@@ -134,6 +138,9 @@ export function DigitsView({
   clearBuyResult,
   logoSrc,
   appName,
+  activeTab = 'deriv',
+  onTabChange,
+  smartTraderProps,
 }: DigitsViewProps) {
   if (error) {
     return (
@@ -162,11 +169,15 @@ export function DigitsView({
         onSwitchAccount={onSwitchAccount}
         logoSrc={logoSrc}
         appName={appName}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         actions={<ThemeToggle />}
       />
       <div className={authState === 'authenticated' ? 'h-[76px] shrink-0' : 'h-[66px] shrink-0'} />
 
-      {isLoading ? (
+      {activeTab === 'smart' && smartTraderProps ? (
+        <SmartTrader {...smartTraderProps} />
+      ) : isLoading ? (
         <div className="p-6 space-y-4">
           <Skeleton className="h-12 w-full rounded-lg" />
           <Skeleton className="h-96 w-full rounded-lg" />

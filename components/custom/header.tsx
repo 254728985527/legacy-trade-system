@@ -23,6 +23,8 @@ interface HeaderProps {
   appName?: string;
   /** Optional controls rendered to the left of the login/logout button (e.g. a theme toggle). */
   actions?: React.ReactNode;
+  activeTab?: 'deriv' | 'smart';
+  onTabChange?: (tab: 'deriv' | 'smart') => void;
 }
 
 function formatBalance(balance: string): string {
@@ -53,6 +55,8 @@ export function Header({
   logoSrc,
   appName,
   actions,
+  activeTab = 'deriv',
+  onTabChange,
 }: HeaderProps) {
   const [logoError, setLogoError] = useState(false);
   const logoLetter = (appName ?? process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading')
@@ -79,9 +83,22 @@ export function Header({
             onError={() => setLogoError(true)}
           />
         )}
-        <h1 className="text-lg font-semibold text-foreground hidden sm:block">
-          {process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading'}
-        </h1>
+        <div className="hidden sm:flex items-center gap-1 rounded-lg border border-border bg-muted/20 p-1">
+          <button
+            type="button"
+            onClick={() => onTabChange?.('deriv')}
+            className={cn('rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', activeTab !== 'smart' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+          >
+            {process.env.NEXT_PUBLIC_DERIV_APP_NAME ?? 'Deriv Trading'}
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange?.('smart')}
+            className={cn('rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', activeTab === 'smart' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+          >
+            Smart Trader
+          </button>
+        </div>
       </div>
       <div className="flex items-center gap-3">
         {actions}

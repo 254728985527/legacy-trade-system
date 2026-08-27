@@ -12,6 +12,7 @@ export default function DigitsPage() {
   const { authState, accounts, activeAccount, login, signUp, logout, switchAccount } = auth;
   const [selectedVolatility, setSelectedVolatilityRaw] = useState('1HZ75V');
   const [tickCount, setTickCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'deriv' | 'smart'>('deriv');
 
   const trading = useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated: !!auth.wsUrl, onAuthWSFailed: logout });
 
@@ -75,6 +76,19 @@ export default function DigitsPage() {
       buyResult={trading.buyResult}
       buyError={trading.buyError}
       clearBuyResult={trading.clearBuyResult}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      smartTraderProps={{
+        symbols: trading.symbols,
+        activeSymbol: trading.activeSymbol,
+        currentTick: trading.currentTick,
+        isConnected: trading.isConnected,
+        activeAccount,
+        selectSymbol: trading.selectSymbol,
+        onRun: trading.buyContract,
+        isBuying: trading.isBuying,
+        buyError: trading.buyError,
+      }}
     />
   );
 }
