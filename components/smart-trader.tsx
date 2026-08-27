@@ -49,6 +49,8 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const livePrice = currentTick?.ask ?? currentTick?.quote;
   const balance = activeAccount ? `${Number(activeAccount.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${activeAccount.currency}` : 'Connect account';
   const payout = (Number(stakeOne || 0) * 1.923).toFixed(2);
+  const showRise = tradeType !== 'Only Down';
+  const showFall = tradeType !== 'Only Up';
 
   return (
     <section className="min-h-dvh bg-slate-50 text-slate-900 px-4 pb-10 pt-5 sm:px-8 lg:px-12">
@@ -82,12 +84,12 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
                   {markets.map(market => <button type="button" key={market.symbol} onClick={() => { selectSymbol(market.symbol); setMarketOpen(false); }} className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50">{market.label}</button>)}
                 </div>}
               </div>
-              <label className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs font-semibold text-slate-500">Trade types</span><select value={tradeType} onChange={event => setTradeType(event.target.value)} className="mt-1 block w-full bg-transparent text-base font-semibold outline-none"><option>Rise/Fall</option><option>Over/Under</option><option>Matches/Differs</option></select></label>
+              <label className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200"><span className="text-xs font-semibold text-slate-500">Trade types</span><select value={tradeType} onChange={event => setTradeType(event.target.value)} className="mt-1 block w-full bg-transparent text-base font-semibold outline-none"><option>Rise/Fall</option><option>Only Up</option><option>Only Down</option><option>Over/Under</option><option>Matches/Differs</option></select></label>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <TradeCard tone="emerald" title="Rise" arrow="↗" stake={stakeOne} payout={payout} onStakeChange={setStakeOne} onBuy={onRun} disabled={!isConnected || isBuying} />
-              <TradeCard tone="rose" title="Fall" arrow="↘" stake={stakeTwo} payout={(Number(stakeTwo || 0) * 1.923).toFixed(2)} onStakeChange={setStakeTwo} onBuy={onRun} disabled={!isConnected || isBuying} />
+            <div className={`grid gap-4 ${showRise && showFall ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
+              {showRise && <TradeCard tone="emerald" title="Rise" arrow="↗" stake={stakeOne} payout={payout} onStakeChange={setStakeOne} onBuy={onRun} disabled={!isConnected || isBuying} />}
+              {showFall && <TradeCard tone="rose" title="Fall" arrow="↘" stake={stakeTwo} payout={(Number(stakeTwo || 0) * 1.923).toFixed(2)} onStakeChange={setStakeTwo} onBuy={onRun} disabled={!isConnected || isBuying} />}
             </div>
           </div>
 
