@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, Play, Settings2 } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ChevronDown, Circle, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,58 +17,77 @@ interface SmartTraderProps {
   selectedDigit?: number; setSelectedDigit?: (digit: number) => void; lastDigit?: number | null;
 }
 
-const TYPE_OPTIONS: { label: string; value: TradeType }[] = [
-  { label: 'Rise/Fall', value: 'only-up' }, { label: 'Matches/Diff', value: 'matches-differs' },
-  { label: 'Even/Odd', value: 'even-odd' }, { label: 'Over/Under', value: 'over-under' },
-  { label: '0/U Hedging', value: 'up-down-hedging' }, { label: 'Higher/Lower', value: 'over-under' },
-  { label: 'Touch/No Touch', value: 'matches-differs' }, { label: 'High/Low', value: 'over-under' },
-  { label: 'Ends In/Out', value: 'matches-differs' }, { label: 'Stay In/Out', value: 'matches-differs' },
+const TYPES: { label: string; value: TradeType; contract: ContractMode }[] = [
+  { label: 'Rise/Fall', value: 'only-up', contract: 'CALL' },
+  { label: 'Only Up', value: 'only-up', contract: 'CALL' },
+  { label: 'Only Down', value: 'only-down', contract: 'PUT' },
+  { label: 'Up + Down Hedging', value: 'up-down-hedging', contract: 'CALL' },
+  { label: 'Over / Under', value: 'over-under', contract: 'DIGITOVER' },
+  { label: 'Matches / Differs', value: 'matches-differs', contract: 'DIGITMATCH' },
+  { label: 'Even / Odd', value: 'even-odd', contract: 'DIGITEVEN' },
 ];
 
-export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError, setTradeType, stake, setStake, durationValue, setDurationValue, digitStats, selectedDigit = 5, setSelectedDigit, lastDigit }: SmartTraderProps) {
-  const [activeType, setActiveType] = useState<TradeType>('over-under');
-  const [activeTypeLabel, setActiveTypeLabel] = useState('Over/Under');
-  const [marketOpen, setMarketOpen] = useState(false);
-  const [selectedThreshold, setSelectedThreshold] = useState(15);
-  const markets = useMemo(() => symbols.filter(s => s.underlying_symbol).slice(0, 8), [symbols]);
-  const selected = activeSymbol?.underlying_symbol_name || activeSymbol?.underlying_symbol || 'Volatility 75 Index';
+export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError, tradeType, setTradeType, setContractMode, stake, setStake, durationValue, setDurationValue, digitStats, selectedDigit = 5, setSelectedDigit, lastDigit }: SmartTraderProps) {
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [selectedTypeLabel, setSelectedTypeLabel] = useState('Rise/Fall');
+  const [durationUnit, setDurationUnit] = useState('ticks');
+  const [stakeTwo, setStakeTwo] = useState(stake || '10');
+  const [allowEquals, setAllowEquals] = useState(false);
+  const [martingale, setMartingale] = useState('2.1');
+  const [stopLoss, setStopLoss] = useState('50');
+  const [takeProfit, setTakeProfit] = useState('100');
+  const markets = useMemo(() => symbols.filter(s => s.underlying_symbol), [symbols]);
+  const selected = activeSymbol?.underlying_symbol_name || activeSymbol?.underlying_symbol || 'Volatility 100 (1s) Index';
   const price = currentTick?.quote ?? currentTick?.ask;
   const percentages = digitStats?.percentages?.length === 10 ? digitStats.percentages : Array(10).fill(10);
-  const totalTicks = digitStats?.totalTicks ?? 0;
-  const max = Math.max(...percentages, 1);
-  const chooseType = (type: TradeType, label: string) => { setActiveType(type); setActiveTypeLabel(label); setTradeType(type); };
-  const chooseDigit = (digit: number) => setSelectedDigit?.(digit);
+  const active = TYPES.find(x => x.value === tradeType) ?? TYPES[3];
+  const payout = (Number(stake || 0) * 1.923).toFixed(2);
+  useEffect(() => {
+    if (tradeType === 'matches-differs') {
+      setTradeType('only-up');
+      setContractMode('CALL');
+    }
+  }, [tradeType, setTradeType, setContractMode]);
+  const chooseType = (item: typeof TYPES[number]) => { setSelectedTypeLabel(item.label); setTradeType(item.value); setContractMode(item.contract); setTypeOpen(false); };
 
-  return <section className="min-h-dvh bg-[#202332] px-3 pb-5 pt-3 text-slate-100 sm:px-5">
-    <div className="mx-auto grid max-w-[1540px] gap-3 xl:grid-cols-[minmax(300px,1.08fr)_minmax(420px,1.55fr)_minmax(300px,.9fr)]">
-      <aside className="space-y-3">
-        <Panel title="TRADE CONTRACT TYPE" right={<span className="text-xs text-emerald-300">Market: {selected}</span>}>
-          <div className="mb-3 flex items-center justify-between rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-3"><div><p className="font-bold">{activeTypeLabel}</p><p className="mt-1 text-[11px] text-slate-400">Predict whether the last decimal digit follows the selected contract.</p></div><Settings2 className="text-slate-400" /></div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">{TYPE_OPTIONS.map(item => <button key={item.label} type="button" onClick={() => chooseType(item.value, item.label)} className={`rounded-lg border px-2 py-2 text-xs font-semibold ${activeTypeLabel === item.label ? 'border-rose-300 bg-rose-500 text-white' : 'border-slate-600 bg-slate-700/70 text-slate-200 hover:bg-slate-600'}`}>{item.label}</button>)}</div>
-        </Panel>
-        <Panel title="LAST DIGIT STATISTICS (PREDICTION SELECTOR)" right={<Badge>Prediction: Digit {selectedDigit}</Badge>}>
-          <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">{percentages.map((value, digit) => <button key={digit} type="button" onClick={() => chooseDigit(digit)} className={`rounded-lg border p-2 ${selectedDigit === digit ? 'border-rose-400 bg-rose-500/20' : 'border-slate-600 bg-slate-800'}`}><span className="text-[10px] font-bold text-emerald-300">{value.toFixed(0)}%</span><span className="my-2 block h-8 rounded bg-emerald-400/80" style={{ opacity: .35 + value / max * .65 }} /><strong>{digit}</strong></button>)}</div>
-        </Panel>
-        <Panel title="CONTINUOUS TRADING POOL" right={<span className="text-emerald-300">All Markets</span>}><div className="grid grid-cols-5 gap-2">{['1 Market','2 Markets','3 Markets','4 Markets','All'].map((x, i) => <button key={x} className={`rounded-md border px-2 py-2 text-xs ${i === 4 ? 'border-orange-300 bg-orange-400 text-slate-900' : 'border-slate-600 bg-slate-700'}`}>{x}</button>)}</div></Panel>
-        <Panel title="LIVE TICK STREAM" right={<span>{selected}</span>}><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th>Time</th><th>Price</th><th>Last Digit</th><th>Side Digit</th></tr></thead><tbody><tr className="border-t border-slate-700"><td>{new Date().toLocaleTimeString()}</td><td>{price ? Number(price).toFixed(4) : '—'}</td><td className="text-rose-300">{lastDigit ?? '—'}</td><td className="text-sky-300">—</td></tr></tbody></table></div></Panel>
+  return <section className="min-h-dvh bg-[#f6f7f9] text-[#30343b]">
+    <div className="flex min-h-dvh">
+      <aside className="hidden w-[74px] shrink-0 flex-col items-center border-r border-[#e7e9ee] bg-white py-5 md:flex">
+        <div className="grid size-9 place-items-center rounded-lg bg-[#1f315f] text-sm font-bold text-white shadow-sm">ST</div>
+        <div className="mt-5 h-px w-10 bg-[#eceef2]" />
+        <RailItem icon="⌂" label="Home" active /><RailItem icon="▱" label="Reports" />
+        <div className="mt-auto"><RailItem icon="◉" label="Help" /><RailItem icon="◎" label="Language" /><RailItem icon="♙" label="Account" /></div>
       </aside>
-      <main className="space-y-3">
-        <Panel title="HIGHEST PERCENTAGE DETECTED" right={<Badge>DUAL CONTINUOUS: TOP 1 + TOP 2</Badge>}><div className="grid gap-2 md:grid-cols-3">{[markets[0], markets[1], activeSymbol].map((market, i) => <div key={i} className="rounded-lg border border-slate-600 bg-slate-800/80 p-3"><div className="flex justify-between text-xs text-slate-400"><span>{i === 0 ? 'HIGHEST MARKET' : i === 1 ? '2ND HIGHEST' : 'SELECTED MARKET'}</span><span className="text-emerald-300">{(21 - i * 5).toFixed(1)}%</span></div><p className="mt-4 font-bold text-emerald-200">{market?.underlying_symbol_name || market?.underlying_symbol || selected}</p><p className="mt-2 text-xs text-slate-400">Cadence: 1 tick / sec</p><p className="mt-3 text-[11px] text-emerald-300">● {i === 2 ? 'ACTIVE SELECTED' : 'CONTINUOUS ACTIVE'}</p></div>)}</div></Panel>
-        <div className="rounded-lg border border-slate-600 bg-slate-800/80 px-4 py-3 text-sm font-semibold text-emerald-200">〽 FASTER EXECUTION STANDBY — LISTENING FOR HIGHEST DIGIT FREQUENCY</div>
-        <Panel title="TARGET DIGIT SELECTION" right={<strong>Digit: {selectedDigit}</strong>}><div className="grid grid-cols-5 gap-2 sm:grid-cols-10">{Array.from({ length: 10 }, (_, digit) => <button key={digit} type="button" onClick={() => chooseDigit(digit)} className={`rounded-md border py-2 font-bold ${selectedDigit === digit ? 'border-emerald-300 bg-emerald-400 text-slate-900' : 'border-slate-600 bg-slate-700'}`}>{digit}</button>)}</div><div className="mt-4 flex items-center justify-between text-xs font-bold"><span>MIN QUALIFYING THRESHOLD (%)</span><span className="text-emerald-300">{selectedThreshold}%</span></div><div className="mt-2 grid grid-cols-5 gap-2">{[12,14,15,18,20].map(x => <button key={x} onClick={() => setSelectedThreshold(x)} className={`rounded-md border py-2 text-xs ${x === selectedThreshold ? 'border-emerald-300 bg-emerald-400 text-slate-900' : 'border-slate-600 bg-slate-700'}`}>{x}%</button>)}</div></Panel>
-        <Panel title="SYNTHETIC SCREENER (BOOM, CRASH, JUMP, VOLATILITIES)" right={<Badge>{markets.length} ≥ {selectedThreshold}%</Badge>}><div className="flex items-center justify-between text-sm text-slate-300"><span>Live connected synthetic markets</span><button className="rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-xs">Show All Synthetics <ChevronDown className="ml-2 inline size-3" /></button></div></Panel>
-        <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr]"><Panel title="DIGIT DISTRIBUTION (LAST 150 TICKS)" right={<span>Total: {totalTicks}</span>}><div className="flex h-36 items-end gap-2">{percentages.map((value, digit) => <div key={digit} className="flex flex-1 flex-col items-center gap-1 text-[10px]"><span>{value.toFixed(0)}%</span><div className={`w-full rounded-t ${digit === selectedDigit ? 'bg-rose-400' : 'bg-emerald-400'}`} style={{ height: `${Math.max(12, value / max * 100)}%` }} /><span>{digit}</span></div>)}</div><p className="mt-3 text-xs text-slate-400">Total Ticks: {totalTicks}</p></Panel><Panel title="PATTERN DETECTION"><p className="font-bold text-emerald-300">{totalTicks > 4 ? 'PATTERN MONITORING' : 'WAITING FOR DATA'}</p><p className="mt-3 text-sm">Latest digit: <strong>{lastDigit ?? '—'}</strong></p><p className="mt-4 text-xs text-slate-400">Confidence is calculated from the connected tick stream.</p></Panel></div>
+      <main className="w-full px-4 py-5 sm:px-7 lg:px-10">
+        <div className="mx-auto max-w-[1200px]">
+          <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-3">
+              <SelectBox label="Market" value={selected}><select aria-label="Market" value={activeSymbol?.underlying_symbol || ''} onChange={e => selectSymbol(e.target.value)} className="w-full appearance-none bg-transparent text-base outline-none"><option value="">{selected}</option>{markets.map(m => <option key={m.underlying_symbol} value={m.underlying_symbol}>{m.underlying_symbol_name}</option>)}</select></SelectBox>
+              <div className="relative"><SelectBox label="Trade types" value={selectedTypeLabel} onClick={() => setTypeOpen(!typeOpen)}><span>{active.label}</span></SelectBox>{typeOpen && <div className="absolute z-10 mt-2 w-64 rounded-xl border border-[#e2e5ea] bg-white p-2 shadow-xl">{TYPES.map(item => <button key={item.label} onClick={() => chooseType(item)} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#f1f4f8]">{item.label}</button>)}</div>}</div>
+            </div>
+            <div className="flex items-center gap-4"><div><div className="text-xs text-muted-foreground">Live quote</div><div className="rounded-md bg-[#00ad84] px-3 py-1 text-lg font-bold text-white">{price ? Number(price).toFixed(2) : '—'}</div></div><div className="text-right"><div className="flex items-center gap-2 text-sm text-[#ec941d]">Demo account <ChevronDown /></div><strong>{activeAccount?.balance ? `${Number(activeAccount.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${activeAccount.currency || 'USD'}` : '—'}</strong></div><Button className="rounded-full bg-[#f53145] px-5 hover:bg-[#db2035]">Deposit</Button></div>
+          </header>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <TradeCard title="Rise" arrow="↗" tone="up" stake={stake} payout={payout} onStake={setStake} onRun={onRun} disabled={!isConnected || isBuying} />
+            <TradeCard title="Fall" arrow="↘" tone="down" stake={stakeTwo} payout={(Number(stakeTwo || 0) * 1.923).toFixed(2)} onStake={setStakeTwo} onRun={onRun} disabled={!isConnected || isBuying} />
+          </div>
+          <div className="mx-auto mt-5 flex max-w-[560px] flex-wrap justify-center gap-3"><SelectBox label="Duration" value=""><Input aria-label="Duration" type="number" value={durationValue} onChange={e => setDurationValue(Number(e.target.value))} className="h-7 border-0 bg-transparent p-0 text-base text-[#30343b] shadow-none" /></SelectBox><SelectBox label="Unit" value="" onClick={() => setDurationUnit(durationUnit === 'ticks' ? 'seconds' : 'ticks')}><span>{durationUnit}</span></SelectBox></div>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2"><StakeField label="Stake 1" value={stake} onChange={setStake} /><StakeField label="Stake 2" value={stakeTwo} onChange={setStakeTwo} /></div>
+          <label className="mx-auto mt-4 flex w-fit items-center gap-2 text-sm"><input type="checkbox" checked={allowEquals} onChange={e => setAllowEquals(e.target.checked)} /> Allow equals <Circle className="size-4 text-muted-foreground" /></label>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-6 border-b border-[#c9ccd1] pb-4 text-sm font-semibold"><RiskField label="Martingale" value={martingale} setValue={setMartingale} /><RiskField label="Stop Loss" value={stopLoss} setValue={setStopLoss} /><RiskField label="Take Profit" value={takeProfit} setValue={setTakeProfit} /></div>
+          <div className="mt-4 flex items-center overflow-hidden rounded-lg border-8 border-[#20232b] bg-white shadow-lg"><Button onClick={() => void onRun()} disabled={!isConnected || isBuying} className="h-16 rounded-none bg-[#00b889] px-7 text-xl font-bold hover:bg-[#009f78]"><Play className="mr-2 fill-current" />{isBuying ? 'Running' : 'Run'}</Button><div className="flex-1 px-6"><div className="text-xs text-muted-foreground">Execution</div><strong>FAST</strong>{buyError && <div className="text-xs text-destructive">{buyError}</div>}</div><div className={`mr-4 size-7 rounded-full p-1 ${isConnected ? 'bg-[#00b889]' : 'bg-muted'}`}><div className="size-5 rounded-full bg-white" /></div></div>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#e4e7eb] bg-white p-3"><span className="mr-2 text-sm font-semibold">Prediction digit</span>{percentages.map((value, digit) => <button key={digit} onClick={() => setSelectedDigit?.(digit)} className={`grid size-9 place-items-center rounded-md border text-sm font-bold ${selectedDigit === digit ? 'border-[#f14c5b] bg-[#fff0f1] text-[#dd3445]' : 'border-[#e3e6eb] bg-[#fafbfc]'}`} title={`${value.toFixed(0)}% frequency`}>{digit}</button>)}<span className="text-xs text-muted-foreground">Last: {lastDigit ?? '—'}</span></div>
+        </div>
       </main>
-      <aside className="space-y-3"><Panel title="Summary" right={<ChevronDown />}><div className="flex gap-5 border-b border-slate-700 pb-3 text-sm"><button className="border-b-2 border-rose-400 pb-2">Summary</button><button className="text-slate-400">Transactions</button><button className="text-slate-400">Journal</button></div><div className="mt-4 flex gap-2"><Button variant="secondary">Download</Button><Button variant="secondary">View Detail</Button></div><div className="mt-5 rounded-lg border border-slate-700 bg-slate-800/70 p-4 text-sm"><p className="text-slate-400">Current contract</p><p className="mt-2 font-bold">{selected}</p><p className="mt-3 text-slate-400">Live entry spot</p><p className="font-bold">{price ? Number(price).toFixed(4) : '—'}</p></div><div className="mt-3 grid grid-cols-2 gap-3 text-sm"><Metric label="Total stake" value={`${stake || '0'} USD`} /><Metric label="Number of runs" value="0" /><Metric label="Contracts won" value="0" /><Metric label="Total profit/loss" value="0.00 USD" /></div></Panel>
-        <Panel title="CONTRACT DIRECTION CHOICE"><div className="grid grid-cols-3 gap-2">{['AUTO (SMART)','OVER','UNDER'].map(x => <button key={x} className={`rounded-md border px-2 py-2 text-xs font-bold ${x === 'AUTO (SMART)' ? 'border-emerald-300 bg-emerald-400 text-slate-900' : 'border-slate-600 bg-slate-700'}`}>{x}</button>)}</div></Panel>
-        <Card className="border-slate-600 bg-slate-800/90"><CardContent className="p-3"><Button onClick={() => void onRun()} disabled={!isConnected || isBuying} className="h-16 w-full bg-emerald-400 text-xl font-bold text-slate-900 hover:bg-emerald-300"><Play className="mr-2 fill-current" />{isBuying ? 'Running' : 'Run'}</Button><div className="mt-3 flex justify-between text-xs"><span>Bot is not running</span><span>{isConnected ? 'CONNECTED' : 'OFFLINE'}</span></div>{buyError && <p className="mt-2 text-xs text-rose-300">{buyError}</p>}</CardContent></Card></aside>
     </div>
-    <div className="sr-only"><label>Market</label><select value={activeSymbol?.underlying_symbol || ''} onChange={e => selectSymbol(e.target.value)}><option value="">{selected}</option>{markets.map(m => <option key={m.underlying_symbol} value={m.underlying_symbol}>{m.underlying_symbol_name}</option>)}</select><label>Market menu</label><button onClick={() => setMarketOpen(!marketOpen)}>Toggle</button><Input aria-label="Duration" value={durationValue} onChange={e => setDurationValue(Number(e.target.value))} /><Input aria-label="Stake" value={stake} onChange={e => setStake(e.target.value)} /></div>
   </section>;
 }
 
-function Panel({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) { return <Card className="border-slate-600 bg-[#2b2e40] shadow-lg"><CardContent className="p-3"><div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold tracking-wide"><span>{title}</span><span className="text-slate-300">{right}</span></div>{children}</CardContent></Card>; }
-function Badge({ children }: { children: ReactNode }) { return <span className="rounded border border-emerald-700 bg-emerald-950/40 px-2 py-1 text-[10px] text-emerald-300">{children}</span>; }
-function Metric({ label, value }: { label: string; value: string }) { return <div><p className="text-xs text-slate-400">{label}</p><p className="mt-1 font-bold">{value}</p></div>; }
+function SelectBox({ label, value, children, onClick }: { label: string; value: string; children: ReactNode; onClick?: () => void }) { return <button type="button" onClick={onClick} className="min-w-40 rounded-xl border border-[#e2e5ea] bg-white px-4 py-2 text-left shadow-sm"><span className="block text-xs text-muted-foreground">{label}</span><span className="flex items-center justify-between gap-3">{children}<ChevronDown className="size-4 shrink-0" /></span></button>; }
+function TradeCard({ title, arrow, tone, stake, payout, onStake, onRun, disabled }: { title: string; arrow: string; tone: 'up' | 'down'; stake: string; payout: string; onStake: (value: string) => void; onRun: () => Promise<void>; disabled: boolean }) { return <Card className="overflow-hidden rounded-2xl border-[#e7e9ed] bg-white shadow-sm"><CardContent className="p-0"><div className="grid grid-cols-[90px_1fr_1fr] items-center gap-3 p-6"><div className={`text-4xl ${tone === 'up' ? 'text-[#ff344c]' : 'text-[#ff344c]'}`}>{arrow}<div className="mt-2 text-lg font-bold text-[#30343b]">{title}</div></div><Stat label="Stake" value={`${stake || '0.00'} USD`} /><Stat label="Payout" value={`${payout} USD`} /></div><div className="flex items-center gap-3 bg-[#fafbfc] px-6 py-3"><Input aria-label={`${title} stake`} value={stake} onChange={e => onStake(e.target.value)} className="max-w-32 bg-white" /><Button onClick={() => void onRun()} disabled={disabled} className={`flex-1 ${tone === 'up' ? 'bg-[#06b889] hover:bg-[#009f78]' : 'bg-[#ec0936] hover:bg-[#cf0630]'}`}>Purchase</Button></div><div className="bg-[#f0f1f3] py-2 text-center text-xs">Net profit: {(Number(stake || 0) * .923).toFixed(2)} USD | Return 92.3%</div></CardContent></Card>; }
+function Stat({ label, value }: { label: string; value: string }) { return <div className="text-center"><div className="text-sm">{label}:</div><strong className="text-lg">{value}</strong></div>; }
+function StakeField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) { return <label className="text-center text-sm font-semibold">{label}<Input value={value} onChange={e => onChange(e.target.value)} className="mt-2 bg-white text-center" /></label>; }
+function RiskField({ label, value, setValue }: { label: string; value: string; setValue: (value: string) => void }) { return <label className="flex items-center gap-2">{label}<Input value={value} onChange={e => setValue(e.target.value)} className="w-20 bg-white text-center" /></label>; }
+function RailItem({ icon, label, active = false }: { icon: string; label: string; active?: boolean }) { return <div className={`flex w-full flex-col items-center gap-1 py-4 text-xs ${active ? 'text-[#1f315f]' : 'text-muted-foreground'}`}><span className="text-xl">{icon}</span><span>{label}</span></div>; }
 
 export default SmartTrader;
