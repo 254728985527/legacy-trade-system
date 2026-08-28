@@ -40,7 +40,6 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const selected = activeSymbol?.underlying_symbol_name || activeSymbol?.underlying_symbol || 'Volatility 100 (1s) Index';
   const price = currentTick?.quote ?? currentTick?.ask;
   const percentages = digitStats?.percentages?.length === 10 ? digitStats.percentages : Array(10).fill(10);
-  const active = TYPES.find(x => x.value === tradeType) ?? TYPES[3];
   const payout = (Number(stake || 0) * 1.923).toFixed(2);
   useEffect(() => {
     if (tradeType === 'matches-differs') {
@@ -51,19 +50,13 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const chooseType = (item: typeof TYPES[number]) => { setSelectedTypeLabel(item.label); setTradeType(item.value); setContractMode(item.contract); setTypeOpen(false); };
 
   return <section className="min-h-dvh bg-[#f6f7f9] text-[#30343b]">
-    <div className="flex min-h-dvh">
-      <aside className="hidden w-[74px] shrink-0 flex-col items-center border-r border-[#e7e9ee] bg-white py-5 md:flex">
-        <div className="grid size-9 place-items-center rounded-lg bg-[#1f315f] text-sm font-bold text-white shadow-sm">ST</div>
-        <div className="mt-5 h-px w-10 bg-[#eceef2]" />
-        <RailItem icon="⌂" label="Home" active /><RailItem icon="▱" label="Reports" />
-        <div className="mt-auto"><RailItem icon="◉" label="Help" /><RailItem icon="◎" label="Language" /><RailItem icon="♙" label="Account" /></div>
-      </aside>
+    <div className="min-h-dvh">
       <main className="w-full px-4 py-5 sm:px-7 lg:px-10">
         <div className="mx-auto max-w-[1200px]">
           <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-3">
               <SelectBox label="Market" value={selected}><select aria-label="Market" value={activeSymbol?.underlying_symbol || ''} onChange={e => selectSymbol(e.target.value)} className="w-full appearance-none bg-transparent text-base outline-none"><option value="">{selected}</option>{markets.map(m => <option key={m.underlying_symbol} value={m.underlying_symbol}>{m.underlying_symbol_name}</option>)}</select></SelectBox>
-              <div className="relative"><SelectBox label="Trade types" value={selectedTypeLabel} onClick={() => setTypeOpen(!typeOpen)}><span>{active.label}</span></SelectBox>{typeOpen && <div className="absolute z-10 mt-2 w-64 rounded-xl border border-[#e2e5ea] bg-white p-2 shadow-xl">{TYPES.map(item => <button key={item.label} onClick={() => chooseType(item)} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#f1f4f8]">{item.label}</button>)}</div>}</div>
+              <div className="relative"><SelectBox label="Trade types" value={selectedTypeLabel} onClick={() => setTypeOpen(!typeOpen)}><span>{selectedTypeLabel}</span></SelectBox>{typeOpen && <div className="absolute z-10 mt-2 w-64 rounded-xl border border-[#e2e5ea] bg-white p-2 shadow-xl">{TYPES.map(item => <button key={item.label} onClick={() => chooseType(item)} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#f1f4f8]">{item.label}</button>)}</div>}</div>
             </div>
             <div className="flex items-center gap-4"><div><div className="text-xs text-muted-foreground">Live quote</div><div className="rounded-md bg-[#00ad84] px-3 py-1 text-lg font-bold text-white">{price ? Number(price).toFixed(2) : '—'}</div></div><div className="text-right"><div className="flex items-center gap-2 text-sm text-[#ec941d]">Demo account <ChevronDown /></div><strong>{activeAccount?.balance ? `${Number(activeAccount.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${activeAccount.currency || 'USD'}` : '—'}</strong></div><Button className="rounded-full bg-[#f53145] px-5 hover:bg-[#db2035]">Deposit</Button></div>
           </header>
@@ -84,10 +77,8 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
 }
 
 function SelectBox({ label, value, children, onClick }: { label: string; value: string; children: ReactNode; onClick?: () => void }) { return <button type="button" onClick={onClick} className="min-w-40 rounded-xl border border-[#e2e5ea] bg-white px-4 py-2 text-left shadow-sm"><span className="block text-xs text-muted-foreground">{label}</span><span className="flex items-center justify-between gap-3">{children}<ChevronDown className="size-4 shrink-0" /></span></button>; }
-function TradeCard({ title, arrow, tone, stake, payout, onStake, onRun, disabled }: { title: string; arrow: string; tone: 'up' | 'down'; stake: string; payout: string; onStake: (value: string) => void; onRun: () => Promise<void>; disabled: boolean }) { return <Card className="overflow-hidden rounded-2xl border-[#e7e9ed] bg-white shadow-sm"><CardContent className="p-0"><div className="grid grid-cols-[90px_1fr_1fr] items-center gap-3 p-6"><div className={`text-4xl ${tone === 'up' ? 'text-[#ff344c]' : 'text-[#ff344c]'}`}>{arrow}<div className="mt-2 text-lg font-bold text-[#30343b]">{title}</div></div><Stat label="Stake" value={`${stake || '0.00'} USD`} /><Stat label="Payout" value={`${payout} USD`} /></div><div className="flex items-center gap-3 bg-[#fafbfc] px-6 py-3"><Input aria-label={`${title} stake`} value={stake} onChange={e => onStake(e.target.value)} className="max-w-32 bg-white" /><Button onClick={() => void onRun()} disabled={disabled} className={`flex-1 ${tone === 'up' ? 'bg-[#06b889] hover:bg-[#009f78]' : 'bg-[#ec0936] hover:bg-[#cf0630]'}`}>Purchase</Button></div><div className="bg-[#f0f1f3] py-2 text-center text-xs">Net profit: {(Number(stake || 0) * .923).toFixed(2)} USD | Return 92.3%</div></CardContent></Card>; }
+function TradeCard({ title, arrow, tone, stake, payout, onStake, onRun, disabled }: { title: string; arrow: string; tone: 'up' | 'down'; stake: string; payout: string; onStake: (value: string) => void; onRun: () => Promise<void>; disabled: boolean }) { return <Card className="overflow-hidden rounded-2xl border-[#e7e9ed] bg-white shadow-sm"><CardContent className="p-0"><div className="grid min-h-[140px] grid-cols-[90px_1fr_1fr] items-center gap-3 px-7 py-6"><div className={`text-4xl ${tone === 'up' ? 'text-[#ff344c]' : 'text-[#ff344c]'}`}>{arrow}<div className="mt-2 text-lg font-bold text-[#30343b]">{title}</div></div><Stat label="Stake" value={`${stake || '0.00'} USD`} /><Stat label="Payout" value={`${payout} USD`} /></div><div className="flex min-h-[72px] items-center gap-3 border-t border-[#edf0f3] bg-[#fafbfc] px-7 py-3"><Input aria-label={`${title} stake`} value={stake} onChange={e => onStake(e.target.value)} className="max-w-32 bg-white" /><Button onClick={() => void onRun()} disabled={disabled} className={`flex-1 ${tone === 'up' ? 'bg-[#06b889] hover:bg-[#009f78]' : 'bg-[#ec0936] hover:bg-[#cf0630]'}`}>Purchase</Button></div><div className="bg-[#f0f1f3] py-2 text-center text-xs">Net profit: {(Number(stake || 0) * .923).toFixed(2)} USD | Return 92.3%</div></CardContent></Card>; }
 function Stat({ label, value }: { label: string; value: string }) { return <div className="text-center"><div className="text-sm">{label}:</div><strong className="text-lg">{value}</strong></div>; }
 function StakeField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) { return <label className="text-center text-sm font-semibold">{label}<Input value={value} onChange={e => onChange(e.target.value)} className="mt-2 bg-white text-center" /></label>; }
 function RiskField({ label, value, setValue }: { label: string; value: string; setValue: (value: string) => void }) { return <label className="flex items-center gap-2">{label}<Input value={value} onChange={e => setValue(e.target.value)} className="w-20 bg-white text-center" /></label>; }
-function RailItem({ icon, label, active = false }: { icon: string; label: string; active?: boolean }) { return <div className={`flex w-full flex-col items-center gap-1 py-4 text-xs ${active ? 'text-[#1f315f]' : 'text-muted-foreground'}`}><span className="text-xl">{icon}</span><span>{label}</span></div>; }
-
 export default SmartTrader;
