@@ -1,0 +1,35 @@
+'use client';
+
+import type { ComponentProps } from 'react';
+import type { SmartTrader } from './smart-trader';
+import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+type Props = ComponentProps<typeof SmartTrader>;
+
+export function OneStop({ activeSymbol, currentTick, digitStats, selectedDigit = 5, setSelectedDigit, activeAccount, isConnected, isBuying, onRun, stake, setStake, proposal }: Props) {
+  const [contract, setContract] = useState('Over / Under');
+  const [direction, setDirection] = useState('Auto (Smart)');
+  const price = currentTick?.ask?.toFixed(2) ?? '—';
+  const digits = digitStats?.percentages ?? Array(10).fill(10);
+  const payout = proposal?.payout ? Number(proposal.payout).toFixed(2) : '—';
+  const topDigits = useMemo(() => digits.map((value, digit) => ({ digit, value })).sort((a, b) => b.value - a.value).slice(0, 3), [digits]);
+
+  return <main className="min-h-[calc(100dvh-76px)] bg-[#11111d] p-3 text-[#f5f5f7] sm:p-5">
+    <div className="mx-auto grid max-w-[1800px] gap-3 xl:grid-cols-[minmax(300px,1.1fr)_minmax(400px,1.8fr)_minmax(280px,1fr)]">
+      <section className="space-y-3">
+        <Panel title="TRADE CONTRACT TYPE"><div className="mb-3 text-xs text-[#a7a4b9]">Market: <b className="text-[#d8b343]">{activeSymbol?.underlying_symbol_name ?? 'Synthetic Index'}</b></div><div className="grid grid-cols-2 gap-2">{['Rise/Fall','Matches/Diff','Even/Odd','Over / Under','O/U Hedging','Higher/Lower','Touch/No Touch','High/Low','Ends In/Out','Stay In/Out'].map(item => <button type="button" key={item} onClick={() => setContract(item)} className={`rounded-md border px-2 py-2 text-xs font-semibold ${contract === item ? 'border-[#f27670] bg-[#f27670] text-white' : 'border-[#3c3b51] bg-[#262536] hover:border-[#16c7a2]'}`}>{item}</button>)}</div></Panel>
+        <Panel title={`LAST DIGIT STATISTICS (${digitStats?.totalTicks ?? 0} TICKS)`}><div className="grid grid-cols-5 gap-2 sm:grid-cols-10">{digits.map((value, digit) => <button type="button" key={digit} onClick={() => setSelectedDigit?.(digit)} className={`rounded-lg border p-2 text-center ${selectedDigit === digit ? 'border-[#f27670] bg-[#3a2938]' : 'border-[#3c3b51] bg-[#242333]'}`}><div className="text-[10px] text-[#71d9bb]">{value.toFixed(1)}%</div><div className="mt-2 h-7 rounded bg-[#4fc594]" /><b className="text-xs">{digit}</b></button>)}</div></Panel>
+        <Panel title="LIVE CONTINUOUS TRADING STREAM"><div className="grid gap-2 sm:grid-cols-3">{topDigits.map(({ digit, value }, index) => <div key={digit} className="rounded border border-[#195e62] bg-[#172932] p-3"><div className="text-xs text-[#72d9bd]">{index + 1} MARKET</div><b>{digit} · {value.toFixed(1)}%</b><div className="mt-2 text-[10px] text-[#aaa7ba]">1 tick / sec · Active</div></div>)}</div></Panel>
+      </section>
+      <section className="space-y-3"><div className="grid gap-3 sm:grid-cols-3"><Metric title="HIGHEST PERCENTAGE" value={`${topDigits[0]?.value?.toFixed(1) ?? '—'}%`} detail={`Digit ${topDigits[0]?.digit ?? '—'}`} /><Metric title="2ND HIGHEST" value={`${topDigits[1]?.value?.toFixed(1) ?? '—'}%`} detail={`Digit ${topDigits[1]?.digit ?? '—'}`} /><Metric title="SELECTED MARKET" value={price} detail={activeSymbol?.underlying_symbol_name ?? 'Synthetic Index'} /></div><Panel title="TARGET DIGIT SELECTION"><div className="flex flex-wrap gap-2">{Array.from({ length: 10 }, (_, digit) => <button type="button" key={digit} onClick={() => setSelectedDigit?.(digit)} className={`size-9 rounded-md border text-sm font-bold ${selectedDigit === digit ? 'border-[#16c7a2] bg-[#4fc594] text-[#11111d]' : 'border-[#3c3b51] bg-[#242333]'}`}>{digit}</button>)}</div><div className="mt-4 flex items-center justify-between text-xs"><span>MIN QUALIFYING THRESHOLD</span><b className="text-[#71d9bb]">{Math.max(...digits).toFixed(1)}%</b></div></Panel><div className="grid gap-3 md:grid-cols-2"><Panel title="DIGIT DISTRIBUTION"><div className="flex h-32 items-end gap-2">{digits.map((value, digit) => <div key={digit} className="flex flex-1 flex-col items-center gap-1"><span className="text-[9px]">{value.toFixed(0)}%</span><div className={`w-full rounded-t ${digit === selectedDigit ? 'bg-[#f27670]' : 'bg-[#4fc594]'}`} style={{ height: `${Math.max(12, value * 5)}%` }} /><span className="text-xs">{digit}</span></div>)}</div></Panel><Panel title="PATTERN DETECTION"><b className="text-[#4fc594]">{topDigits[0]?.value >= 15 ? 'STRONG PATTERN' : 'MONITORING'}</b><p className="mt-3 text-sm text-[#b9b5c5]">Digit {topDigits[0]?.digit ?? '—'} currently leads the distribution.</p><div className="mt-4 text-2xl font-bold text-[#71d9bb]">{Math.min(99, Math.round((topDigits[0]?.value ?? 0) * 5))}%</div><div className="text-xs text-[#aaa7ba]">Accuracy estimate</div></Panel></div></section>
+      <section className="space-y-3"><Panel title="SUMMARY"><div className="grid grid-cols-3 gap-2 text-center text-xs"><Stat label="Market" value={activeSymbol?.underlying_symbol ?? '—'} /><Stat label="Live price" value={price} /><Stat label="Payout" value={payout} /></div><div className="mt-5 border-t border-[#3c3b51] pt-4 text-sm">Account balance <b className="float-right">{activeAccount ? `${Number(activeAccount.balance).toFixed(2)} ${activeAccount.currency}` : 'Not connected'}</b></div></Panel><Panel title="CONTRACT DIRECTION CHOICE"><div className="grid grid-cols-3 gap-2">{['Auto (Smart)','Over','Under'].map(item => <button type="button" key={item} onClick={() => setDirection(item)} className={`rounded-md px-2 py-2 text-xs font-semibold ${direction === item ? 'bg-[#4fc594] text-[#11111d]' : 'bg-[#262536]'}`}>{item}</button>)}</div></Panel><Panel title="RUN"><div className="grid grid-cols-[110px_1fr] gap-3"><Button onClick={onRun} disabled={!isConnected || isBuying} className="h-16 bg-[#4fc594] text-[#11111d] hover:bg-[#71d9bb]">Run</Button><div><div className="text-xs text-[#aaa7ba]">Contract: {contract}</div><input aria-label="Stake" value={stake} onChange={event => setStake(event.target.value)} className="mt-2 w-full rounded border border-[#d8b343] bg-transparent px-3 py-2" /><div className="mt-2 text-xs text-[#71d9bb]">{isBuying ? 'Executing…' : isConnected ? 'Ready to execute' : 'Connect account to run'}</div></div></div></Panel></section>
+    </div>
+  </main>;
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) { return <div className="rounded-lg border border-[#45435a] bg-[#1b1b2b] p-3 shadow-lg"><h2 className="mb-3 text-xs font-bold tracking-wide text-[#f0d06a]">{title}</h2>{children}</div>; }
+function Metric({ title, value, detail }: { title: string; value: string; detail: string }) { return <Panel title={title}><div className="text-xl font-bold text-[#71d9bb]">{value}</div><div className="mt-1 text-xs text-[#aaa7ba]">{detail}</div></Panel>; }
+function Stat({ label, value }: { label: string; value: string }) { return <div><div className="text-[#aaa7ba]">{label}</div><b className="mt-1 block truncate text-[#f5f5f7]">{value}</b></div>; }
+
+export default OneStop;

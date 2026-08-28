@@ -11,6 +11,7 @@ import { TradeTypeChips } from '@/components/custom/trade-type-chips';
 import { SymbolSelector } from '@/components/custom/symbol-selector';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
 import { SmartTrader } from './smart-trader';
+import { OneStop } from './one-stop';
 import {
   VolatilityIndexPanel,
   LivePricePanel,
@@ -91,8 +92,8 @@ export interface DigitsViewProps {
   // Branding (used by preview route; no-op in the real app)
   logoSrc?: string;
   appName?: string;
-  activeTab?: 'deriv' | 'smart';
-  onTabChange?: (tab: 'deriv' | 'smart') => void;
+  activeTab?: 'deriv' | 'smart' | 'one-stop';
+  onTabChange?: (tab: 'deriv' | 'smart' | 'one-stop') => void;
   smartTraderProps?: React.ComponentProps<typeof SmartTrader>;
 }
 
@@ -177,6 +178,8 @@ export function DigitsView({
 
       {activeTab === 'smart' && smartTraderProps ? (
         <SmartTrader {...smartTraderProps} />
+      ) : activeTab === 'one-stop' && smartTraderProps ? (
+        <OneStop {...smartTraderProps} />
       ) : isLoading ? (
         <div className="p-6 space-y-4">
           <Skeleton className="h-12 w-full rounded-lg" />

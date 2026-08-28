@@ -12,7 +12,7 @@ export default function DigitsPage() {
   const { authState, accounts, activeAccount, login, signUp, logout, switchAccount } = auth;
   const [selectedVolatility, setSelectedVolatilityRaw] = useState('1HZ75V');
   const [tickCount, setTickCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'deriv' | 'smart'>('deriv');
+  const [activeTab, setActiveTab] = useState<'deriv' | 'smart' | 'one-stop'>('deriv');
 
   const trading = useDigitsTrading({ ws, isConnected, isExhausted, isAuthenticated: !!auth.wsUrl, onAuthWSFailed: logout });
 

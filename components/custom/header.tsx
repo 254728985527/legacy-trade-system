@@ -23,8 +23,8 @@ interface HeaderProps {
   appName?: string;
   /** Optional controls rendered to the left of the login/logout button (e.g. a theme toggle). */
   actions?: React.ReactNode;
-  activeTab?: 'deriv' | 'smart';
-  onTabChange?: (tab: 'deriv' | 'smart') => void;
+  activeTab?: 'deriv' | 'smart' | 'one-stop';
+  onTabChange?: (tab: 'deriv' | 'smart' | 'one-stop') => void;
 }
 
 function formatBalance(balance: string): string {
@@ -97,6 +97,13 @@ export function Header({
             className={cn('rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', activeTab === 'smart' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground')}
           >
             Smart Trader
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange?.('one-stop')}
+            className={cn('rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', activeTab === 'one-stop' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+          >
+            ONE STOP
           </button>
         </div>
       </div>
