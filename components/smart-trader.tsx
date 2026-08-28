@@ -5,14 +5,14 @@ import { ChevronDown, Circle, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import type { ActiveSymbol, DerivAccount, Tick } from '@deriv/core';
+import type { ActiveSymbol, DerivAccount, Tick, ProposalInfo } from '@deriv/core';
 import type { ContractMode, TradeType } from '@/lib/types';
 import { SYMBOL_DISPLAY_NAMES } from '@/lib/active-symbols-display-names';
 
 interface SmartTraderProps {
   symbols: ActiveSymbol[]; activeSymbol: ActiveSymbol | null; currentTick: Tick | null; isConnected: boolean;
   activeAccount: DerivAccount | null; selectSymbol: (symbol: string) => void; onRun: () => Promise<void>;
-  isBuying: boolean; buyError: string | null; tradeType: TradeType; setTradeType: (type: TradeType) => void;
+  isBuying: boolean; buyError: string | null; proposal?: ProposalInfo | null; tradeType: TradeType; setTradeType: (type: TradeType) => void;
   contractMode: ContractMode; setContractMode: (mode: ContractMode) => void; stake: string; setStake: (value: string) => void;
   durationValue: number; setDurationValue: (value: number) => void; digitStats?: { percentages: number[]; counts: number[]; totalTicks: number };
   selectedDigit?: number; setSelectedDigit?: (digit: number) => void; lastDigit?: number | null;
@@ -28,7 +28,7 @@ const TYPES: { label: string; value: TradeType; contract: ContractMode }[] = [
   { label: 'Even / Odd', value: 'even-odd', contract: 'DIGITEVEN' },
 ];
 
-export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError, tradeType, setTradeType, setContractMode, stake, setStake, durationValue, setDurationValue, digitStats, selectedDigit = 5, setSelectedDigit, lastDigit }: SmartTraderProps) {
+export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, activeAccount, selectSymbol, onRun, isBuying, buyError, proposal, tradeType, setTradeType, setContractMode, stake, setStake, durationValue, setDurationValue, digitStats, selectedDigit = 5, setSelectedDigit, lastDigit }: SmartTraderProps) {
   const [typeOpen, setTypeOpen] = useState(false);
   const [marketOpen, setMarketOpen] = useState(false);
   const [selectedTypeLabel, setSelectedTypeLabel] = useState('Rise/Fall');
@@ -54,7 +54,11 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
   const selected = activeSymbol?.underlying_symbol_name || activeSymbol?.underlying_symbol || 'Volatility 100 (1s) Index';
   const price = currentTick?.quote ?? currentTick?.ask;
   const percentages = digitStats?.percentages?.length === 10 ? digitStats.percentages : Array(10).fill(10);
-  const payout = (Number(stake || 0) * 1.923).toFixed(2);
+  const liveStake = Number(stake) || 0;
+  const livePayout = proposal?.payout ?? 0;
+  const payoutRate = liveStake > 0 && livePayout > 0 ? livePayout / liveStake : 0;
+  const formatPayout = (value: string) => (payoutRate > 0 ? (Math.max(0, Number(value) || 0) * payoutRate).toFixed(2) : '—');
+  const payout = formatPayout(stake);
   useEffect(() => {
     if (tradeType === 'matches-differs') {
       setTradeType('only-up');
@@ -76,7 +80,7 @@ export function SmartTrader({ symbols, activeSymbol, currentTick, isConnected, a
           </header>
           <div className="grid gap-5 lg:grid-cols-2">
             <TradeCard title={selectedTypeLabel} arrow="↗" tone="up" stake={stake} payout={payout} onStake={setStake} onRun={onRun} disabled={!isConnected || isBuying} />
-            <TradeCard title={selectedTypeLabel} arrow="↘" tone="down" stake={stakeTwo} payout={(Number(stakeTwo || 0) * 1.923).toFixed(2)} onStake={setStakeTwo} onRun={onRun} disabled={!isConnected || isBuying} />
+            <TradeCard title={selectedTypeLabel} arrow="↘" tone="down" stake={stakeTwo} payout={formatPayout(stakeTwo)} onStake={setStakeTwo} onRun={onRun} disabled={!isConnected || isBuying} />
           </div>
           <div className="mx-auto mt-5 flex max-w-[560px] flex-wrap justify-center gap-3"><SelectBox label="Duration" value=""><Input aria-label="Duration" type="number" value={durationValue} onChange={e => setDurationValue(Number(e.target.value))} className="h-7 border-0 bg-transparent p-0 text-base text-[#30343b] shadow-none" /></SelectBox><SelectBox label="Unit" value="" onClick={() => setDurationUnit(durationUnit === 'ticks' ? 'seconds' : 'ticks')}><span>{durationUnit}</span></SelectBox></div>
           <div className="mt-6 grid gap-4 lg:grid-cols-2"><StakeField label="Stake 1" value={stake} onChange={setStake} /><StakeField label="Stake 2" value={stakeTwo} onChange={setStakeTwo} /></div>
